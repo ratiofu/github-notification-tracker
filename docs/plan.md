@@ -38,29 +38,31 @@
 
 ## Domain Model
 
-- Define the application schema before implementing source fetchers, storage, or rendering.
-- Use Zod as the authoritative schema for domain models crossing process, API, config, DB, log, or render boundaries.
+- Define system boundary schemas before implementing source fetchers, storage, or rendering.
+- Use Zod as the authoritative schema for models crossing process, API, config, DB, log, or user input/output boundaries.
 - Infer immutable TypeScript types from Zod schemas.
-- Use explicit TypeScript interfaces/types for internal pure-state models that do not need runtime validation.
+- Use explicit TypeScript interfaces/types or data classes for memory-only internal models that do not need runtime validation.
+- Prefer efficient internal representations for runtime-only behavior, such as `ReadonlySet` containment indexes for participant filtering.
+- Prefer stable GitHub-provided IDs for internal entity identity when available; names and logins can change.
 - Treat all domain and state models as immutable.
 - Perform in-memory updates by creating copies, not mutating existing objects.
 - Do not pass anonymous object shapes across module boundaries.
 - Required model groups:
   - config model
   - GitHub source payload wrappers
-  - aggregate root model
-  - PR aggregate model
+  - notification thread model
+  - PR notification thread model
   - local notification model
   - participant model
   - team membership cache model
   - read-state model
-  - render row/view model
-  - API status model
+  - render row/view internal model
+  - API status internal model
   - debug warning/log event model
 - Required identity fields:
   - local notification ID
   - deterministic source fingerprint
-  - aggregate root ID
+  - notification thread ID
   - GitHub entity IDs/URLs where available
 - Required notification fields:
   - type
@@ -119,7 +121,7 @@
   - summary `Space` uses snapshot cycle: all read → all unread → restore prior child state
 - Rendering:
   - summary item groups one parent PR
-  - data model allows future aggregate roots beyond PRs
+  - data model allows future notification thread types beyond PRs
   - summary mode on shows PR summaries plus runtime-expanded child rows
   - summary mode off shows detailed notification rows only
   - summary and detailed items both render two physical lines
@@ -165,7 +167,7 @@
   - Ink for persistent TUI
   - `@clack/prompts` only for optional non-persistent setup prompts
   - Octokit REST for GitHub API
-  - Zod for domain/config/persistence/runtime-boundary schemas
+  - Zod for config/API/persistence/log boundary schemas
   - `node:sqlite` sync API behind async-shaped repository interfaces
   - `dotenv` or equivalent for `.env`
   - citty for CLI parsing
@@ -222,7 +224,7 @@
 
 ## Test Plan
 
-- Unit-test Zod schemas with valid/invalid fixtures for config, source wrappers, notifications, participants, render rows, and log events.
+- Unit-test Zod schemas with valid/invalid fixtures for config, source wrappers, notifications, participants, persisted state, and log events.
 - Unit-test config precedence and persisted runtime config writes.
 - Unit-test source fingerprinting, random ID shape, dedup, and replacement/ejection rules.
 - Unit-test mappers for comments, review comments, reviews, review requests, mentions, failed checks, merged, closed.
@@ -257,7 +259,15 @@
   - Implementation note: `oxfmt` uses `.oxfmtrc.json` as its default configuration filename.
   - Implementation note: use the TypeScript 7 release candidate toolchain package named `tsgo` for TypeScript commands.
   - Completed scaffold uses `@typescript/native-preview` for the `tsgo` binary, `tsup` for ESM CLI bundling, `oxlint`, `oxfmt`, Vitest V8 coverage with 90% line/branch thresholds, and `scripts/pnpm-parallel.sh` for `pnpm quality`.
-- [ ] Define Zod-backed domain schemas and inferred TypeScript model types before implementing feature modules.
+- [x] Define Zod-backed domain schemas and inferred TypeScript model types before implementing feature modules.
+  - Implementation note: domain schema modules should be pure and live under `src/domain/`, with colocated schema tests.
+  - Implementation note: add Zod as a runtime dependency through the pinned pnpm catalog before defining boundary schemas.
+  - Implementation note: use notification-thread domain language for parent groupings; avoid generic aggregate-root terminology in model names.
+  - Implementation note: keep Zod schemas focused on system boundary records; memory-only internal models should be TypeScript-only interfaces/types or data classes.
+  - Implementation note: persisted runtime config overrides must not apply defaults; absence must remain distinguishable from explicit override values.
+  - Implementation note: specialized source wrapper schemas must narrow their `sourceKind`, and thread child notification IDs must use `LocalNotificationIdSchema`.
+  - Completed domain boundary schema layer covers config, GitHub source payload wrappers, notification threads, PR metadata, local notifications, participants, team membership cache, read state, debug warnings, log events, and raw payload references.
+  - Completed domain documentation includes terse JSDoc on schema relationships and `docs/architecture.md` with an embedded Mermaid domain model chart.
 - [ ] Add config loader/persister with CLI/env/`.env`/YAML precedence.
 - [ ] Add SQLite schema, repositories, migrations/version table, and retention pruning.
 - [ ] Add JSONL daily logger.

@@ -8,6 +8,7 @@
 - CRITICAL: Do not add requirements, expectations, or preferences.
 - CRITICAL: Request review after each completed task.
 - CRITICAL: Only perform Git operations of any kind when explicitly requested. Do not execute any git commands unless explicitly asked. If asked to commit; use Conventional Commit message format. Do not rebase or force-push.
+- CRITICAL: If the implementation for meeting a particular requirement or task becomes to complex, pause and collaborate with the human to find simpler, alternative approaches.
 
 ## Project Structure & Module Organization
 
@@ -19,7 +20,7 @@
   - `src/` for TypeScript implementation.
   - Organize implementation into logical module directories under `src/` to keep directory size manageable.
   - Colocate Vitest test files with the modules they test; for example, `cli.test.ts` lives beside `cli.ts`.
-  - `src/domain/` for Zod schemas and inferred immutable model types.
+  - `src/domain/` for boundary Zod schemas plus explicit internal TypeScript model types.
   - `src/github/`, `src/storage/`, `src/tui/`, and `src/config/` for adapters and feature modules.
   - Use top-level `test/` only for cross-module integration fixtures or tests that do not belong to one module.
 
@@ -42,7 +43,11 @@
 - Use TypeScript ESM with explicit module boundaries.
 - Prefer functional core, imperative shell.
 - Write imperative code modules so they can be easily mocked for testing
-- Define domain models with Zod; infer immutable TypeScript types from schemas.
+- Define system boundary models with Zod; infer immutable TypeScript types from schemas.
+- Memory-only internal models do not need Zod validation; use explicit TypeScript interfaces/types or data classes and choose efficient runtime representations.
+- Prefer stable GitHub-provided IDs for internal entity identity when available; names and logins can change.
+- Keep domain schema modules pure: no filesystem, network, process environment, or rendering side effects.
+- Use notification-thread domain language for parent groupings; avoid generic aggregate-root terminology in model names.
 - Treat in-memory state as immutable; update by copying, never by mutation.
 - Use descriptive names: `notificationRepository`, `githubActivitySource`, `renderRows`.
 - Do not pass anonymous object shapes across module boundaries.

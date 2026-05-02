@@ -10,7 +10,7 @@ catalogs:
       specifier: 25.6.0
       version: 25.6.0
     '@typescript/native-preview':
-      specifier: ^7.0.0-dev
+      specifier: 7.0.0-dev.20260501.1
       version: 7.0.0-dev.20260501.1
     '@vitest/coverage-v8':
       specifier: 4.1.5
@@ -30,10 +30,17 @@ catalogs:
     vitest:
       specifier: 4.1.5
       version: 4.1.5
+    zod:
+      specifier: 4.4.2
+      version: 4.4.2
 
 importers:
 
   .:
+    dependencies:
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.2
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -1359,6 +1366,9 @@ packages:
     engines: {node: '>=8'}
     hasBin: true
 
+  zod@4.4.2:
+    resolution: {integrity: sha512-IynmDyxsEsb9RKzO3J9+4SxXnl2FTFSzNBaKKaMV6tsSk0rw9gYw9gs+JFCq/qk2LCZ78KDwyj+Z289TijSkUw==}
+
 snapshots:
 
   '@babel/helper-string-parser@7.27.1': {}
@@ -2317,3 +2327,5 @@ snapshots:
     dependencies:
       siginfo: 2.0.0
       stackback: 0.0.2
+
+  zod@4.4.2: {}

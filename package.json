@@ -24,6 +24,9 @@
     "deps:upgrade": "pnpm update --latest --interactive",
     "quality": "scripts/pnpm-parallel.sh lint format test typecheck"
   },
+  "dependencies": {
+    "zod": "catalog:"
+  },
   "devDependencies": {
     "@types/node": "catalog:",
     "@typescript/native-preview": "catalog:",

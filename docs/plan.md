@@ -276,7 +276,17 @@
   - Implementation note: runtime config persistence must merge into existing YAML so required file config such as `repo` and `github.patEnv` is preserved.
   - Implementation note: use terse JSDoc on config boundaries where it clarifies responsibility, precedence, or persistence behavior.
   - Completed config module adds pure config merging, YAML and `.env` parsing, Node filesystem adapter, default config paths, runtime config persistence, and precedence tests.
-- [ ] Add SQLite schema, repositories, migrations/version table, and retention pruning.
+- [x] Add SQLite schema, repositories, migrations/version table, and retention pruning.
+  - Implementation note: use `node:sqlite` `DatabaseSync` at the adapter edge, hidden behind async-shaped repository interfaces.
+  - Implementation note: parse persisted JSON records through boundary schemas when reading them back from SQLite.
+  - Implementation note: store schema migrations in a version table and keep retention pruning explicit so tests can exercise it with temp databases.
+  - Implementation note: use SQLite `STRICT` tables consistently so SQLite rejects basic column type mismatches before repository/domain validation.
+  - Implementation note: storage repository tests should focus on meaningful upsert conflict, validation, and transaction rollback behavior.
+  - Implementation note: reusable domain model fixtures live close to the domain models and should be imported by feature tests instead of duplicated.
+  - Implementation note: keep storage repository classes in class-matched files with matching colocated test files.
+  - Implementation note: shared row-parsing helpers exist to keep SQLite row-shape checks consistent before JSON parsing and Zod boundary validation.
+  - Implementation note: notification upserts must handle duplicate source fingerprints because repeated polling may generate a new local notification ID for the same source activity.
+  - Completed storage module adds the schema migration table, SQLite database opener, repositories for threads, notifications, raw payloads, read state, and team membership cache, plus retention pruning with temp SQLite database tests.
 - [ ] Add JSONL daily logger.
 - [ ] Add Octokit REST adapter with PAT auth, pagination, conditional requests where useful, concurrency limit 4, backoff, and API status events.
 - [ ] Add GitHub source fetchers for PRs, activity/timeline data, reviews/comments, checks, and teams.

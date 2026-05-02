@@ -1,6 +1,7 @@
 export * from "./api-status.js";
 export * from "./config.js";
 export * from "./debug.js";
+export * from "./fixtures.js";
 export * from "./github-source.js";
 export * from "./notification.js";
 export * from "./notification-thread.js";

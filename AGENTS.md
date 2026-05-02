@@ -20,6 +20,7 @@
   - `src/` for TypeScript implementation.
   - Organize implementation into logical module directories under `src/` to keep directory size manageable.
   - Colocate Vitest test files with the modules they test; for example, `cli.test.ts` lives beside `cli.ts`.
+  - Keep classes in one file per class, with test files matching the class file names.
   - `src/domain/` for boundary Zod schemas plus explicit internal TypeScript model types.
   - `src/github/`, `src/storage/`, `src/tui/`, and `src/config/` for adapters and feature modules.
   - Use top-level `test/` only for cross-module integration fixtures or tests that do not belong to one module.
@@ -38,8 +39,9 @@
   - `pnpm test` runs Vitest with coverage.
   - `pnpm quality` runs typecheck, lint, format, and tests via `scripts/pnpm-parallel.sh`.
 
-## Coding Style & Naming Conventions
+## Coding Style & Conventions
 
+- Use terse JSDoc where it clarifies a key responsibility, component relationship, or critical/complex behavior.
 - Use TypeScript ESM with explicit module boundaries.
 - Prefer functional core, imperative shell.
 - Write imperative code modules so they can be easily mocked for testing
@@ -49,9 +51,11 @@
 - Keep domain schema modules pure: no filesystem, network, process environment, or rendering side effects.
 - Use notification-thread domain language for parent groupings; avoid generic aggregate-root terminology in model names.
 - Treat in-memory state as immutable; update by copying, never by mutation.
-- Use terse JSDoc where it clarifies a key responsibility, component relationship, or critical/complex behavior.
 - Use descriptive names: `notificationRepository`, `githubActivitySource`, `renderRows`.
 - Do not pass anonymous object shapes across module boundaries.
+- Use SQLite `STRICT` tables consistently for storage schemas so SQLite enforces basic column storage types before repository/domain validation.
+- Notification storage deduplicates by deterministic source fingerprint because repeated polling can regenerate local notification IDs for the same source activity.
+- Centralize SQLite row parsing helpers so repositories share row-shape checks before schema/domain parsing.
 
 ## Testing Guidelines
 
@@ -59,7 +63,9 @@
 - Keep module tests colocated as `*.test.ts` beside the source module they cover.
 - Maintain at least 90% line and branch coverage.
 - Test pure modules directly: schemas, mappers, replacement/ejection policy, filters, reducers, and repositories.
+- Reuse shared domain model fixtures from modules close to the models instead of redefining equivalent test factories in feature tests.
 - Use temp SQLite databases for storage tests.
+- Prefer storage tests that cover meaningful conflict, validation, and transaction behavior over artificial defensive guard coverage.
 - Mock Octokit responses with fixtures for integration tests.
 
 ## Commit & Pull Request Guidelines

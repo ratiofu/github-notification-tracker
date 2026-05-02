@@ -5,11 +5,13 @@ catalog:
   "@types/node": 25.6.0
   "@typescript/native-preview": 7.0.0-dev.20260501.1
   "@vitest/coverage-v8": 4.1.5
+  dotenv: 17.4.2
   oxfmt: 0.47.0
   oxlint: 1.62.0
   tsup: 8.5.1
   tsx: 4.21.0
   vitest: 4.1.5
+  yaml: 2.8.3
   zod: 4.4.2
 
 onlyBuiltDependencies:

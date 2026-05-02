@@ -49,6 +49,7 @@
 - Keep domain schema modules pure: no filesystem, network, process environment, or rendering side effects.
 - Use notification-thread domain language for parent groupings; avoid generic aggregate-root terminology in model names.
 - Treat in-memory state as immutable; update by copying, never by mutation.
+- Use terse JSDoc where it clarifies a key responsibility, component relationship, or critical/complex behavior.
 - Use descriptive names: `notificationRepository`, `githubActivitySource`, `renderRows`.
 - Do not pass anonymous object shapes across module boundaries.
 

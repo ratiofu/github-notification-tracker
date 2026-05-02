@@ -268,7 +268,14 @@
   - Implementation note: specialized source wrapper schemas must narrow their `sourceKind`, and thread child notification IDs must use `LocalNotificationIdSchema`.
   - Completed domain boundary schema layer covers config, GitHub source payload wrappers, notification threads, PR metadata, local notifications, participants, team membership cache, read state, debug warnings, log events, and raw payload references.
   - Completed domain documentation includes terse JSDoc on schema relationships and `docs/architecture.md` with an embedded Mermaid domain model chart.
-- [ ] Add config loader/persister with CLI/env/`.env`/YAML precedence.
+- [x] Add config loader/persister with CLI/env/`.env`/YAML precedence.
+  - Implementation note: keep merge logic pure and injectable; filesystem/process access belongs in a thin adapter.
+  - Implementation note: config precedence is CLI overrides > process env > parsed `.env` > YAML config file > schema defaults.
+  - Implementation note: use `GHT_REPO` and `GHT_GITHUB_PAT_ENV` for env/`.env` config overrides; the token remains read through the configured `github.patEnv` name.
+  - Implementation note: persisted runtime config writes only runtime override fields and preserves absent fields as absent.
+  - Implementation note: runtime config persistence must merge into existing YAML so required file config such as `repo` and `github.patEnv` is preserved.
+  - Implementation note: use terse JSDoc on config boundaries where it clarifies responsibility, precedence, or persistence behavior.
+  - Completed config module adds pure config merging, YAML and `.env` parsing, Node filesystem adapter, default config paths, runtime config persistence, and precedence tests.
 - [ ] Add SQLite schema, repositories, migrations/version table, and retention pruning.
 - [ ] Add JSONL daily logger.
 - [ ] Add Octokit REST adapter with PAT auth, pagination, conditional requests where useful, concurrency limit 4, backoff, and API status events.

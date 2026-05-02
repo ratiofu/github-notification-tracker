@@ -25,6 +25,8 @@
     "quality": "scripts/pnpm-parallel.sh lint format test typecheck"
   },
   "dependencies": {
+    "dotenv": "catalog:",
+    "yaml": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

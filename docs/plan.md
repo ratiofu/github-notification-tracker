@@ -36,6 +36,44 @@
 - Logs:
   - JSONL daily files at `~/.config/ght/logs/YYYY-MM-DD.jsonl`.
 
+## Domain Model
+
+- Define the application schema before implementing source fetchers, storage, or rendering.
+- Use Zod as the authoritative schema for domain models crossing process, API, config, DB, log, or render boundaries.
+- Infer immutable TypeScript types from Zod schemas.
+- Use explicit TypeScript interfaces/types for internal pure-state models that do not need runtime validation.
+- Treat all domain and state models as immutable.
+- Perform in-memory updates by creating copies, not mutating existing objects.
+- Do not pass anonymous object shapes across module boundaries.
+- Required model groups:
+  - config model
+  - GitHub source payload wrappers
+  - aggregate root model
+  - PR aggregate model
+  - local notification model
+  - participant model
+  - team membership cache model
+  - read-state model
+  - render row/view model
+  - API status model
+  - debug warning/log event model
+- Required identity fields:
+  - local notification ID
+  - deterministic source fingerprint
+  - aggregate root ID
+  - GitHub entity IDs/URLs where available
+- Required notification fields:
+  - type
+  - title/text
+  - target URL
+  - source timestamp
+  - actor
+  - explicit targets
+  - participants
+  - parent PR metadata
+  - read/unread state
+  - source JSON references
+
 ## Behavior
 
 - Poll GitHub repo/PR/activity/timeline/check/team APIs.
@@ -69,6 +107,7 @@
   - store raw source JSON for reprocessing
 - Filtering:
   - `[P]` opens unified participant picker for users and teams
+  - picker lists seen participants from stored notifications plus cached teams/members
   - participant match includes explicit targets, actors, authors, team targets, and cached team members
   - team sync caches team membership hourly by default
   - failed team sync keeps cached data active, turns API dot red, writes log entry
@@ -81,6 +120,8 @@
 - Rendering:
   - summary item groups one parent PR
   - data model allows future aggregate roots beyond PRs
+  - summary mode on shows PR summaries plus runtime-expanded child rows
+  - summary mode off shows detailed notification rows only
   - summary and detailed items both render two physical lines
   - newest activity first
   - unread-only summary mode shows PRs with any unread child
@@ -119,7 +160,9 @@
 - Package as tsup-built ESM CLI with `bin.ght`.
 - Use:
   - Ink for persistent TUI
+  - `@clack/prompts` only for optional non-persistent setup prompts
   - Octokit REST for GitHub API
+  - Zod for domain/config/persistence/runtime-boundary schemas
   - `node:sqlite` sync API behind async-shaped repository interfaces
   - `dotenv` or equivalent for `.env`
   - citty for CLI parsing
@@ -127,8 +170,8 @@
   - oxlint
   - oxfmt
   - TypeScript
-  - Vitest + V8 coverage
-- Reuse `../gitx/scripts/pnpm-parallel.sh`.
+  - Vitest with V8 coverage on by default (all tests run with coverage unless explicitly excluded)
+  - use `vitest-mock-extended` for mock utilities (not `ts-mockito`)
 - Scripts:
   - `pnpm build`
   - `pnpm dev`
@@ -136,7 +179,6 @@
   - `pnpm lint`
   - `pnpm format`
   - `pnpm test`
-  - `pnpm coverage`
   - `pnpm audit`
   - `pnpm deps:upgrade`
   - `pnpm quality` runs lint, format, test with coverage, typecheck via `scripts/pnpm-parallel.sh`
@@ -148,6 +190,7 @@
 
 - Functional core, imperative shell.
 - Core modules:
+  - domain schema
   - config loading/merging/persistence
   - GitHub client interfaces
   - activity source fetchers
@@ -174,6 +217,7 @@
 
 ## Test Plan
 
+- Unit-test Zod schemas with valid/invalid fixtures for config, source wrappers, notifications, participants, render rows, and log events.
 - Unit-test config precedence and persisted runtime config writes.
 - Unit-test source fingerprinting, random ID shape, dedup, and replacement/ejection rules.
 - Unit-test mappers for comments, review comments, reviews, review requests, mentions, failed checks, merged, closed.
@@ -192,6 +236,7 @@
 
 - Classic PAT `repo` scope is acceptable for v1.
 - GitHub notification-thread endpoints stay out of v1.
+- Ink is required for the main persistent UI; `@clack/prompts` is insufficient for resize-aware always-on rendering, focus navigation, and live status updates.
 - GitHub REST rate-limit/backoff behavior follows current docs: <https://docs.github.com/en/rest/using-the-rest-api/best-practices-for-using-the-rest-api>.
 - `node:sqlite` is synchronous in current Node docs; v1 hides this behind async-shaped repository interfaces: <https://nodejs.org/api/sqlite.html>.
 - GitHub activity/timeline APIs may have limited history; v1 compensates with 7-day PR polling and local persistence, not GitHub notification threads.
@@ -199,6 +244,7 @@
 ## Tasks
 
 - [ ] Scaffold pnpm workspace, pinned catalogs, package metadata, TypeScript, tsup, oxlint, oxfmt, Vitest coverage, and quality scripts.
+- [ ] Define Zod-backed domain schemas and inferred TypeScript model types before implementing feature modules.
 - [ ] Add config loader/persister with CLI/env/`.env`/YAML precedence.
 - [ ] Add SQLite schema, repositories, migrations/version table, and retention pruning.
 - [ ] Add JSONL daily logger.

@@ -157,6 +157,9 @@
 - Node 25+.
 - pnpm single-package workspace.
 - pnpm catalogs with pinned versions only; no ranges.
+- Run `pnpm approve-builds` when pnpm reports ignored build scripts so workspace build-script policy is recorded.
+- `pnpm lint` runs oxlint in fix mode.
+- TypeScript tooling uses the TypeScript 7 release candidate package named `tsgo`.
 - Package as tsup-built ESM CLI with `bin.ght`.
 - Use:
   - Ink for persistent TUI
@@ -189,6 +192,8 @@
 ## Architecture
 
 - Functional core, imperative shell.
+- Organize source files into logical directories under `src/`; avoid accumulating unrelated modules directly under `src/`.
+- Colocate module tests beside the modules they test; reserve top-level `test/` for cross-module integration tests and shared fixtures.
 - Core modules:
   - domain schema
   - config loading/merging/persistence
@@ -243,7 +248,15 @@
 
 ## Tasks
 
-- [ ] Scaffold pnpm workspace, pinned catalogs, package metadata, TypeScript, tsup, oxlint, oxfmt, Vitest coverage, and quality scripts.
+- [x] Scaffold pnpm workspace, pinned catalogs, package metadata, TypeScript, tsup, oxlint, oxfmt, Vitest coverage, and quality scripts.
+  - Implementation note: repository starts as a docs-only project; the scaffold should establish the root as the single package workspace and add the first minimal `src/` and test files needed to verify tooling.
+  - Implementation note: create `pnpm-workspace.yaml` catalog support before dependency installation, then install dependencies with `pnpm add -E <dependency>` to resolve exact latest versions.
+  - Implementation note: when pnpm reports ignored build scripts and requests `pnpm approve-builds`, run it so workspace build-script policy is updated.
+  - Implementation note: `pnpm lint` should run oxlint in fix mode.
+  - Implementation note: project commands should run under NVM Node 25 using `.nvmrc`; this machine also has Node 24 active by default in some shells.
+  - Implementation note: `oxfmt` uses `.oxfmtrc.json` as its default configuration filename.
+  - Implementation note: use the TypeScript 7 release candidate toolchain package named `tsgo` for TypeScript commands.
+  - Completed scaffold uses `@typescript/native-preview` for the `tsgo` binary, `tsup` for ESM CLI bundling, `oxlint`, `oxfmt`, Vitest V8 coverage with 90% line/branch thresholds, and `scripts/pnpm-parallel.sh` for `pnpm quality`.
 - [ ] Define Zod-backed domain schemas and inferred TypeScript model types before implementing feature modules.
 - [ ] Add config loader/persister with CLI/env/`.env`/YAML precedence.
 - [ ] Add SQLite schema, repositories, migrations/version table, and retention pruning.

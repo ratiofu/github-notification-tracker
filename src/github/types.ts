@@ -55,6 +55,13 @@ export interface GitHubRestResponse<TData> {
   readonly status: number;
 }
 
+/** Minimal client contract used by higher-level GitHub source fetchers. */
+export interface GitHubRestRequester {
+  readonly request: <TData = unknown>(
+    input: GitHubRequestInput,
+  ) => Promise<GitHubRestResponse<TData>>;
+}
+
 /** Abstracts Octokit requests so adapter behavior can be tested without network calls. */
 export interface GitHubTransport {
   readonly request: <TData>(

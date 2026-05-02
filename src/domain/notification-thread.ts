@@ -24,7 +24,11 @@ export const NotificationThreadSchema = z.object({
 
 export const PullRequestStateSchema = z.enum(["open", "closed", "merged"]);
 
-/** Stable PR metadata copied onto threads, notifications, and render rows. */
+/**
+ * Stable PR metadata copied onto threads, notifications, and render rows.
+ *
+ * Source: https://docs.github.com/en/rest/pulls/pulls#get-a-pull-request
+ */
 export const PullRequestMetadataSchema = z.object({
   author: GitHubActorSchema,
   baseRef: z.string().min(1).optional(),

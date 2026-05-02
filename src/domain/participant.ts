@@ -8,6 +8,11 @@ export const ParticipantKindSchema = z.enum(["user", "team"]);
 
 export const GitHubLoginSchema = z.string().min(1);
 
+/**
+ * Normalized user participant fields derived from GitHub user objects.
+ *
+ * Source: https://docs.github.com/en/rest/users/users#get-the-authenticated-user
+ */
 export const UserParticipantSchema = z.object({
   avatarUrl: UrlSchema.optional(),
   displayName: z.string().min(1).optional(),
@@ -16,6 +21,11 @@ export const UserParticipantSchema = z.object({
   login: GitHubLoginSchema,
 });
 
+/**
+ * Normalized team participant fields derived from GitHub team responses.
+ *
+ * Source: https://docs.github.com/en/rest/teams/teams#list-teams
+ */
 export const TeamParticipantSchema = z.object({
   kind: z.literal("team"),
   members: z.array(GitHubLoginSchema).default([]),

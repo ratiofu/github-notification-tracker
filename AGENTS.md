@@ -34,10 +34,12 @@
 
 - Use `.nvmrc` to select Node 25 for project commands; Node 25 is installed through NVM.
 - Use `pnpm`; dependencies must be pinned through `pnpm-workspace.yaml` catalogs once scaffolding exists.
+- Do not pass an explicit `--store-dir` to pnpm commands; use the project/session pnpm configuration as-is.
 - New dependencies must be installed via `pnpm add -E`.
 - When scaffolding dependency catalogs, create `pnpm-workspace.yaml` catalog support first, then run `pnpm add -E <dependency>` so pnpm resolves current exact versions.
 - When pnpm reports ignored build scripts and requests `pnpm approve-builds`, run `pnpm approve-builds` so workspace build-script policy is recorded.
 - Use the TypeScript 7 release candidate toolchain package named `tsgo` for TypeScript commands.
+- `pnpm lint` runs oxlint in type-aware fix mode.
 - Commands:
   - `pnpm dev` runs the CLI locally.
   - `pnpm build` builds the ESM `ght` binary.
@@ -51,6 +53,9 @@
 - Prefer functional core, imperative shell.
 - Write imperative code modules so they can be easily mocked for testing
 - Define system boundary models with Zod; infer immutable TypeScript types from schemas.
+- Link remote-model schemas to the external source of truth and manually validate copied fields against that source when adding or changing them.
+- Do not assume GitHub REST list endpoints all return top-level arrays; validate each endpoint response shape from the GitHub docs before mapping payloads.
+- Use Zod v4 top-level string format schemas such as `z.url()` and `z.iso.datetime()` instead of deprecated chained string validators.
 - Memory-only internal models do not need Zod validation; use explicit TypeScript interfaces/types or data classes and choose efficient runtime representations.
 - Prefer stable GitHub-provided IDs for internal entity identity when available; names and logins can change.
 - Keep domain schema modules pure: no filesystem, network, process environment, or rendering side effects.

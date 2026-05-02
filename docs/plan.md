@@ -79,6 +79,7 @@
 ## Behavior
 
 - Poll GitHub repo/PR/activity/timeline/check/team APIs.
+- The check-runs endpoint returns an envelope with `check_runs`; source fetching must unwrap individual check-run payloads before local notification mapping.
 - Do not use GitHub notification-thread endpoints in v1.
 - Each poll reads the raw GitHub activity queue first and processes newest events.
 - Use raw activity events to decide which PRs need detail refreshes, including new PRs and updated PRs already known locally.
@@ -162,8 +163,10 @@
 - Node 25+.
 - pnpm single-package workspace.
 - pnpm catalogs with pinned versions only; no ranges.
+- Do not pass an explicit pnpm `--store-dir`; rely on the active project/session pnpm configuration.
 - Run `pnpm approve-builds` when pnpm reports ignored build scripts so workspace build-script policy is recorded.
 - `pnpm lint` runs oxlint in fix mode.
+- `pnpm lint` runs oxlint with type-aware checks.
 - TypeScript tooling uses the TypeScript 7 release candidate package named `tsgo`.
 - Package as tsup-built ESM CLI with `bin.ght`.
 - Use:
@@ -258,6 +261,7 @@
   - create `pnpm-workspace.yaml` catalog support before dependency installation, then install dependencies with `pnpm add -E <dependency>` to resolve exact latest versions.
   - when pnpm reports ignored build scripts and requests `pnpm approve-builds`, run it so workspace build-script policy is updated.
   - `pnpm lint` should run oxlint in fix mode.
+  - oxlint should run in type-aware mode with `typescript/no-deprecated` denied.
   - project commands should run under NVM Node 25 using `.nvmrc`; this machine also has Node 24 active by default in some shells.
   - `oxfmt` uses `.oxfmtrc.json` as its default configuration filename.
   - use the TypeScript 7 release candidate toolchain package named `tsgo` for TypeScript commands.
@@ -303,7 +307,12 @@
   - preserve cache validators for paginated reads and honor GitHub `retry-after` / `x-ratelimit-reset` headers instead of retrying generic 403 responses.
   - name constructor configuration objects as options, such as `GitHubRestClientOptions`.
   - Completed GitHub adapter adds a PAT-authenticated `OctokitRestClient`, injectable transport, pagination support, conditional request headers, response cache validator exposure, retry/backoff, and lifecycle event tests.
-- [ ] Add GitHub source fetchers for PRs, activity/timeline data, reviews/comments, checks, and teams.
+- [x] Add GitHub source fetchers for PRs, activity/timeline data, reviews/comments, checks, and teams.
+  - keep fetchers thin: translate domain repo/PR inputs into REST routes, apply cache validators, and validate source wrappers at the GitHub boundary.
+  - expose raw activity as the poll entry point; PR detail fetches remain explicit serial calls selected by later orchestration.
+  - raw GitHub API payload schemas must link to the GitHub REST docs they were copied from and be manually checked against those docs when changed; record durable manual checks in `docs/schema-sources.md`.
+  - use Zod v4 top-level string format schemas for GitHub URL/date-time fields, not deprecated chained validators.
+  - Completed GitHub source fetcher adds raw repository activity, PR detail, timeline, issue comments, review comments, reviews, check runs, repository teams, and team member fetches with cache-validator propagation and boundary wrapper validation.
 - [ ] Add source mappers, local notification model, fingerprints, raw JSON storage, warnings, and actor-exclusion policy.
 - [ ] Add replacement/ejection policies for checks, merged PRs, and closed PRs.
 - [ ] Add participant extraction, team cache sync, and participant filter matching.

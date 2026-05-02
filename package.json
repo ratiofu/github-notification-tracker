@@ -17,7 +17,7 @@
     "build": "tsup",
     "dev": "tsx src/cli/index.ts",
     "typecheck": "tsgo --noEmit",
-    "lint": "oxlint --fix .",
+    "lint": "oxlint --type-aware --fix .",
     "format": "oxfmt --check .",
     "test": "vitest run --coverage",
     "audit": "pnpm audit",
@@ -36,6 +36,7 @@
     "@vitest/coverage-v8": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
+    "oxlint-tsgolint": "catalog:",
     "tsup": "catalog:",
     "tsx": "catalog:",
     "vitest": "catalog:"

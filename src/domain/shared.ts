@@ -2,16 +2,28 @@ import { z } from "zod";
 
 import type { DeepReadonly } from "./readonly.js";
 
+/**
+ * GitHub REST IDs are usually numeric, while activity event IDs are documented as strings.
+ *
+ * Sources:
+ * - https://docs.github.com/en/rest/users/users#get-the-authenticated-user
+ * - https://docs.github.com/en/rest/activity/events#list-repository-events
+ */
 export const GitHubEntityIdSchema = z.union([z.number().int().nonnegative(), z.string().min(1)]);
 
 export const LocalNotificationIdSchema = z.string().regex(/^[A-Za-z0-9_-]{21}$/);
 
 export const SourceFingerprintSchema = z.string().min(1);
 export const NotificationThreadIdSchema = z.string().min(1);
-export const IsoDateTimeSchema = z.string().datetime({ offset: true });
-export const UrlSchema = z.string().url();
+export const IsoDateTimeSchema = z.iso.datetime({ offset: true });
+export const UrlSchema = z.url();
 export const RepoNameSchema = z.string().regex(/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/);
 
+/**
+ * Normalized subset of GitHub user objects used for actors/authors.
+ *
+ * Source: https://docs.github.com/en/rest/users/users#get-the-authenticated-user
+ */
 export const GitHubActorSchema = z.object({
   avatarUrl: UrlSchema.optional(),
   id: GitHubEntityIdSchema.optional(),

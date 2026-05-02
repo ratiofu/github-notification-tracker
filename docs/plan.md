@@ -1,109 +1,215 @@
-# CLI GitHub Notification Tracker
+# CLI GitHub Notification Tracker `ght` – Implementation Plan
 
-## Overview
+## Summary
 
-A small CLI tool, `ght`, will render a persistent screen to display a subset of GitHub notifications that the user may be interested in and update that list regularly.
+- Build `ght`: Ink-based TypeScript CLI for one configured GitHub repo.
+- Source model is activity-first, not GitHub notification-thread-first.
+- Use `GITHUB_PAT` from environment or `.env`; document classic PAT `repo` scope.
+- Store generated local notifications, read state, raw source JSON, teams, and cache state in SQLite under `~/.config/ght/`.
+- Keep the plan terse, executable, and task-oriented.
 
-## Domain Language
+## Interfaces
 
-TODO: domain language definitions to be provided as part of requirement refinements
+- Config path: `~/.config/ght/config.yaml`.
+- Config precedence: CLI flags > env/`.env` > config file > defaults.
+- Required config:
+  - `repo: owner/name`
+  - `github.patEnv: GITHUB_PAT`
+- Default config:
+  - `pollIntervalSeconds: 30`
+  - `teamSyncIntervalSeconds: 3600`
+  - `retentionDays: 90`
+  - `summaryMode: true`
+  - `unreadOnly: false`
+  - `showFooter: true`
+  - `participants: []`
+- Runtime-persisted config:
+  - summary mode
+  - unread-only mode
+  - footer visibility
+  - participant selections
+  - polling/team-sync intervals
+- Runtime-only state:
+  - focus
+  - expanded PR summaries
+  - summary read-state snapshots
+- Logs:
+  - JSONL daily files at `~/.config/ght/logs/YYYY-MM-DD.jsonl`.
 
-## Requirements
+## Behavior
 
+- Poll GitHub repo/PR/activity/timeline/check/team APIs.
+- Do not use GitHub notification-thread endpoints in v1.
+- Poll open PRs plus closed/merged PRs updated in the last 7 days.
+- Backfill first run:
+  - open PRs
+  - 7 calendar days of supported activity
+  - current failed checks
+  - all imported notifications start unread
+- Default visibility:
+  - empty participant filter means all supported activity
+  - exclude events where authenticated user is actor/originator
+- Supported local notification types:
+  - PR comments
+  - PR review comments
+  - PR review submissions
+  - review requests
+  - mentions from `@login` and `@org/team`
+  - failed PR checks for current head SHA
+  - PR merged
+  - PR closed
+- Replacement/ejection:
+  - replacement activities get new local notification IDs and start unread
+  - failed-check outcome changes eject prior notifications for that workflow/check context
+  - merged PRs prune prior non-comment notifications, keep `PR merged`, allow future comments
+  - closed-unmerged PRs mirror merged behavior with `PR closed`
+- Local identity:
+  - 21-character URL-safe random local ID
+  - deterministic source fingerprint for dedup/replacement
+  - store raw source JSON for reprocessing
+- Filtering:
+  - `[P]` opens unified participant picker for users and teams
+  - participant match includes explicit targets, actors, authors, team targets, and cached team members
+  - team sync caches team membership hourly by default
+  - failed team sync keeps cached data active, turns API dot red, writes log entry
+- Read state:
+  - local only
+  - no GitHub mark-read sync
+  - stored in SQLite
+  - `Space` toggles detailed item read/unread
+  - summary `Space` uses snapshot cycle: all read → all unread → restore prior child state
+- Rendering:
+  - summary item groups one parent PR
+  - data model allows future aggregate roots beyond PRs
+  - summary and detailed items both render two physical lines
+  - newest activity first
+  - unread-only summary mode shows PRs with any unread child
+  - expanded summaries show unread children only when unread-only is active
+  - no line wrapping; recompute truncation on terminal resize
+- Keys:
+  - arrows navigate
+  - `Enter` opens selected item target URL
+  - `Space` toggles read state
+  - `[S]` toggles persisted summary mode
+  - `[O]` expands/collapses selected summary
+  - `Ctrl+J` and `Shift+Enter` are attempted aliases for `[O]`
+  - `[R]` toggles unread-only
+  - `[D]` toggles debug mode
+  - `[F]` toggles footer
+  - `[P]` opens participant picker
+  - `[Q]` and `Ctrl+C` exit
+- Footer:
+  - unread count
+  - command help
+  - right-edge API indicator:
+    - grey `⦾` idle
+    - yellow `⦿` during active API requests
+    - red after request failure or any in-flight request older than 15s
+    - returns to normal after successful request cycle
+- Debug mode:
+  - show generated notification fields plus associated raw GitHub payload summaries/JSON
+  - preserve navigation and read toggles
+  - show unmapped/partial mapping warnings
 
-### Product Requirements
+## Technical Stack
 
-**P-1.** The list of notifications is updated at as frequently as technically feasible. If the CLI tool can actively and efficiently receive push notifications, go that route. If only polling is available, default to a configurable polling interval of 30 seconds, or even more if that's allowed by whatever polling mechanism used without causing rate limiting.
+- Node 25+.
+- pnpm single-package workspace.
+- pnpm catalogs with pinned versions only; no ranges.
+- Package as tsup-built ESM CLI with `bin.ght`.
+- Use:
+  - Ink for persistent TUI
+  - Octokit REST for GitHub API
+  - `node:sqlite` sync API behind async-shaped repository interfaces
+  - `dotenv` or equivalent for `.env`
+  - citty for CLI parsing
+  - picocolors for simple color constants if useful
+  - oxlint
+  - oxfmt
+  - TypeScript
+  - Vitest + V8 coverage
+- Reuse `../gitx/scripts/pnpm-parallel.sh`.
+- Scripts:
+  - `pnpm build`
+  - `pnpm dev`
+  - `pnpm typecheck`
+  - `pnpm lint`
+  - `pnpm format`
+  - `pnpm test`
+  - `pnpm coverage`
+  - `pnpm audit`
+  - `pnpm deps:upgrade`
+  - `pnpm quality` runs lint, format, test with coverage, typecheck via `scripts/pnpm-parallel.sh`
+- Coverage gate:
+  - 90% lines
+  - 90% branches
 
-**P-2.** The user can configure the type of notifications they want to display. The list of available notification types will be determined during requirements refinement.
+## Architecture
 
-**P-3.** For each notification, two lines are rendered, one for the notification content itself and one for information on the parent. If no parent is available, a single line is entered. The exact relationships between parent objects and notifications will be clarified as part of requirement refinement. Generally, the parent is a PR and the notification some action taken on the PR.
+- Functional core, imperative shell.
+- Core modules:
+  - config loading/merging/persistence
+  - GitHub client interfaces
+  - activity source fetchers
+  - source-to-notification mappers
+  - replacement/ejection policy
+  - participant extraction/matching
+  - SQLite repositories
+  - TUI state reducer
+  - render model builder
+  - debug model builder
+  - logger
+- Imperative shells:
+  - CLI entry
+  - Octokit adapter
+  - SQLite adapter
+  - browser opener
+  - filesystem config/log adapter
+  - Ink app
+- Theme:
+  - one semantic theme object
+  - rendering receives theme explicitly
+  - focused item uses brighter semantic colors
+  - unfocused item uses duller semantic colors
 
-**P-4.** Debug mode: A command [D] exits to toggle the view to show all notifications in raw form without links or formatting, but the same kind of navigation help, so that the developer can slowly built up parsing and rendering strategies for each event type.
+## Test Plan
 
-**P-4.** Notifications can be marked as read, both in normal and in debug mode.
+- Unit-test config precedence and persisted runtime config writes.
+- Unit-test source fingerprinting, random ID shape, dedup, and replacement/ejection rules.
+- Unit-test mappers for comments, review comments, reviews, review requests, mentions, failed checks, merged, closed.
+- Unit-test authenticated-user actor exclusion.
+- Unit-test participant extraction and participant filter matching.
+- Unit-test team cache behavior when sync succeeds/fails.
+- Unit-test summary grouping, ordering, unread-only filtering, expansion, and `Space` snapshot cycle.
+- Unit-test SQLite repositories with temp DBs.
+- Unit-test API status state transitions: idle, active, failed, stalled, recovered.
+- Unit-test debug view model includes raw source JSON and mapping warnings.
+- TUI reducer tests cover keybindings without snapshot-heavy UI tests.
+- Integration tests mock Octokit responses with fixtures.
+- `pnpm quality` must pass.
 
-**P-5.** A filter to show only unread notifications or all of them can be toggled
+## Assumptions
 
-**P-6.** A single-line footer with the number of unread notifications and a list of commands; the footer can be toggled on and of with [F]
-
-**P-7.** Notification rendering of PR comments and approvals: Those two are the primary notification types to support from the start.
-
-  1st line: {selector} {notification-type} {relative-time} {notification-text} {unread-status}
-  2nd line:            {PR #} {PR title}
-
-  Whereas
-
-  {selector}: a marker to show the currently selected, active notification (aka focus); may already have a default provided by the UI toolkit
-  {notification-type} a short, English word label mapped to an actual notification type. Labels may potentially include emojis
-
-
-**P-8.** Individually printented lines never wrap and are re-rendered when the text window size changes
-
-**P-9.** in addition to showing a marker on the active notification (focus), the notification itself is rendered in brighter colors corresponding to the default, duller colors used for rendering unfocused notifications
-
-**P-10.** Notifications can be filtered by user; pressing [U] renders a list of all users who where active in the repo in the last 7 calendar days; the user can mark one or more as selected or clear the list; the selected list is persisted in the config. Only notifications for the selected users are shown and counted. An empty list means "all users"
-
-**P-11.** Notifications can be filtered by team; the command trigger is [T] and otherwise it works the same as the user filter
-
-
-### General Requirements
-
-**G-1.** All configuration of the tool must support a configuration file at ~/.config/ght/config.yaml that can also be overridden via command line arguments, with both short and long flags supported. This requires a centralized configuration management.
-
-**G-2.** For selected configuration, the user changes made during runtime are stored ~/.config/ght/config.yaml; generally, the current view configuration (debug mode on/off, show unread only on/off, show footer on/off, etc.) is stored the moment the user changes the setting so it's persisted
-
-**G-3.** Filtering for notifications is done at the "effective" model level. A given notification may not have enough information to participate in filters, such as missing the team or user information. Find the related parent object and use thaat as a basis for filtering. From the filter perspective, the notification is (left) joined with it's parent object's meta data
-
-
-### Engineering Requirements
-
-**E-1.** use modern, common, open source code quality tooling, such as oxfmt and oxlint for TypeScript.
-**E-2.** split code into units that enable thorough unit test with high coverage (vitest + coverage)
-**E-3.** use the "functional core, imperitive shell" pattern wherever possible
-**E-4.** make the interfaces for imperitive shell implementations easily mockable
-**E-5.** keep an internal application state model separate from the rendering and re-render on window size change
-**E-6.** user per-object type rendering strategies so we can swiftly add support for more strategies
-**E-7.** all colors referenced are encoded in a single Theme with semantic color constants; the theme is passed to the rendering layer
-
-For the concrete technical approach of how to obtain and listen for notifications, the agent will provide implementation options and iterate together with the human until an approach is settled.
-
-
-## Data Model
-
-TODO: build the data model during requirements refinement. Agent to propose an initial data model and iterate with human until it is complete.
-
-## Command and Configuration Overview
-
-single-letter commands are case-insensitive by default, unless specified otherwise
-
-* [Enter] opens the exact notification target URL in the browser, such as to a comment or commit
-* cursor keys ([up], [down]) navigate the list of notifications up or down
-* [Space] toggles a notification as read or unread
-* [R] toggles the "unread notifications only" between on (show unread only) and off (show all)
-* [D] toggles between the debug mode for showing all raw notifications
-* [F] toggle the footer
-* [U] displays the user filter list
-
-Unless specificied otherwise, command characters are the same as the corresponding short CLI flag
-
-
-## General Guidance
-
-For the UI implementation, assume the following dependencies
-
-@clack/prompts
-citty
-picocolors
-
-If using `gh` to implement the requirements, use `execa`
-
-You may follow _some_ of the patterns used in the GitX project at `../gitx`
-
-## Agent Notes
-
-{area for the agent to track notes, key insights, and memories about this plan}
+- Classic PAT `repo` scope is acceptable for v1.
+- GitHub notification-thread endpoints stay out of v1.
+- GitHub REST rate-limit/backoff behavior follows current docs: <https://docs.github.com/en/rest/using-the-rest-api/best-practices-for-using-the-rest-api>.
+- `node:sqlite` is synchronous in current Node docs; v1 hides this behind async-shaped repository interfaces: <https://nodejs.org/api/sqlite.html>.
+- GitHub activity/timeline APIs may have limited history; v1 compensates with 7-day PR polling and local persistence, not GitHub notification threads.
 
 ## Tasks
 
-- [ ] complete authoring plan together with the agent
+- [ ] Scaffold pnpm workspace, pinned catalogs, package metadata, TypeScript, tsup, oxlint, oxfmt, Vitest coverage, and quality scripts.
+- [ ] Add config loader/persister with CLI/env/`.env`/YAML precedence.
+- [ ] Add SQLite schema, repositories, migrations/version table, and retention pruning.
+- [ ] Add JSONL daily logger.
+- [ ] Add Octokit REST adapter with PAT auth, pagination, conditional requests where useful, concurrency limit 4, backoff, and API status events.
+- [ ] Add GitHub source fetchers for PRs, activity/timeline data, reviews/comments, checks, and teams.
+- [ ] Add source mappers, local notification model, fingerprints, raw JSON storage, warnings, and actor-exclusion policy.
+- [ ] Add replacement/ejection policies for checks, merged PRs, and closed PRs.
+- [ ] Add participant extraction, team cache sync, and participant filter matching.
+- [ ] Add TUI reducer for view state, keybindings, read/unread state, summary expansion, and persisted setting updates.
+- [ ] Add Ink renderers for normal mode, summary/detail rows, debug mode, footer, API indicator, participant picker, focus colors, and resize truncation.
+- [ ] Add browser-open behavior for summary PR URLs and detailed notification target URLs.
+- [ ] Add README with setup, `GITHUB_PAT`, classic `repo` scope, config, commands, storage paths, and troubleshooting.
+- [ ] Add unit/integration tests to satisfy 90% line and branch coverage.
+- [ ] Run `pnpm quality`.

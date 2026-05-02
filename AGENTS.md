@@ -56,6 +56,7 @@
 - Use SQLite `STRICT` tables consistently for storage schemas so SQLite enforces basic column storage types before repository/domain validation.
 - Notification storage deduplicates by deterministic source fingerprint because repeated polling can regenerate local notification IDs for the same source activity.
 - Centralize SQLite row parsing helpers so repositories share row-shape checks before schema/domain parsing.
+- Logger adapters should append boundary-validated JSONL events to daily files and keep filesystem writes at the adapter edge.
 
 ## Testing Guidelines
 

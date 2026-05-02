@@ -251,43 +251,46 @@
 ## Tasks
 
 - [x] Scaffold pnpm workspace, pinned catalogs, package metadata, TypeScript, tsup, oxlint, oxfmt, Vitest coverage, and quality scripts.
-  - Implementation note: repository starts as a docs-only project; the scaffold should establish the root as the single package workspace and add the first minimal `src/` and test files needed to verify tooling.
-  - Implementation note: create `pnpm-workspace.yaml` catalog support before dependency installation, then install dependencies with `pnpm add -E <dependency>` to resolve exact latest versions.
-  - Implementation note: when pnpm reports ignored build scripts and requests `pnpm approve-builds`, run it so workspace build-script policy is updated.
-  - Implementation note: `pnpm lint` should run oxlint in fix mode.
-  - Implementation note: project commands should run under NVM Node 25 using `.nvmrc`; this machine also has Node 24 active by default in some shells.
-  - Implementation note: `oxfmt` uses `.oxfmtrc.json` as its default configuration filename.
-  - Implementation note: use the TypeScript 7 release candidate toolchain package named `tsgo` for TypeScript commands.
+  - repository starts as a docs-only project; the scaffold should establish the root as the single package workspace and add the first minimal `src/` and test files needed to verify tooling.
+  - create `pnpm-workspace.yaml` catalog support before dependency installation, then install dependencies with `pnpm add -E <dependency>` to resolve exact latest versions.
+  - when pnpm reports ignored build scripts and requests `pnpm approve-builds`, run it so workspace build-script policy is updated.
+  - `pnpm lint` should run oxlint in fix mode.
+  - project commands should run under NVM Node 25 using `.nvmrc`; this machine also has Node 24 active by default in some shells.
+  - `oxfmt` uses `.oxfmtrc.json` as its default configuration filename.
+  - use the TypeScript 7 release candidate toolchain package named `tsgo` for TypeScript commands.
   - Completed scaffold uses `@typescript/native-preview` for the `tsgo` binary, `tsup` for ESM CLI bundling, `oxlint`, `oxfmt`, Vitest V8 coverage with 90% line/branch thresholds, and `scripts/pnpm-parallel.sh` for `pnpm quality`.
 - [x] Define Zod-backed domain schemas and inferred TypeScript model types before implementing feature modules.
-  - Implementation note: domain schema modules should be pure and live under `src/domain/`, with colocated schema tests.
-  - Implementation note: add Zod as a runtime dependency through the pinned pnpm catalog before defining boundary schemas.
-  - Implementation note: use notification-thread domain language for parent groupings; avoid generic aggregate-root terminology in model names.
-  - Implementation note: keep Zod schemas focused on system boundary records; memory-only internal models should be TypeScript-only interfaces/types or data classes.
-  - Implementation note: persisted runtime config overrides must not apply defaults; absence must remain distinguishable from explicit override values.
-  - Implementation note: specialized source wrapper schemas must narrow their `sourceKind`, and thread child notification IDs must use `LocalNotificationIdSchema`.
+  - domain schema modules should be pure and live under `src/domain/`, with colocated schema tests.
+  - add Zod as a runtime dependency through the pinned pnpm catalog before defining boundary schemas.
+  - use notification-thread domain language for parent groupings; avoid generic aggregate-root terminology in model names.
+  - keep Zod schemas focused on system boundary records; memory-only internal models should be TypeScript-only interfaces/types or data classes.
+  - persisted runtime config overrides must not apply defaults; absence must remain distinguishable from explicit override values.
+  - specialized source wrapper schemas must narrow their `sourceKind`, and thread child notification IDs must use `LocalNotificationIdSchema`.
   - Completed domain boundary schema layer covers config, GitHub source payload wrappers, notification threads, PR metadata, local notifications, participants, team membership cache, read state, debug warnings, log events, and raw payload references.
   - Completed domain documentation includes terse JSDoc on schema relationships and `docs/architecture.md` with an embedded Mermaid domain model chart.
 - [x] Add config loader/persister with CLI/env/`.env`/YAML precedence.
-  - Implementation note: keep merge logic pure and injectable; filesystem/process access belongs in a thin adapter.
-  - Implementation note: config precedence is CLI overrides > process env > parsed `.env` > YAML config file > schema defaults.
-  - Implementation note: use `GHT_REPO` and `GHT_GITHUB_PAT_ENV` for env/`.env` config overrides; the token remains read through the configured `github.patEnv` name.
-  - Implementation note: persisted runtime config writes only runtime override fields and preserves absent fields as absent.
-  - Implementation note: runtime config persistence must merge into existing YAML so required file config such as `repo` and `github.patEnv` is preserved.
-  - Implementation note: use terse JSDoc on config boundaries where it clarifies responsibility, precedence, or persistence behavior.
+  - keep merge logic pure and injectable; filesystem/process access belongs in a thin adapter.
+  - config precedence is CLI overrides > process env > parsed `.env` > YAML config file > schema defaults.
+  - use `GHT_REPO` and `GHT_GITHUB_PAT_ENV` for env/`.env` config overrides; the token remains read through the configured `github.patEnv` name.
+  - persisted runtime config writes only runtime override fields and preserves absent fields as absent.
+  - runtime config persistence must merge into existing YAML so required file config such as `repo` and `github.patEnv` is preserved.
+  - use terse JSDoc on config boundaries where it clarifies responsibility, precedence, or persistence behavior.
   - Completed config module adds pure config merging, YAML and `.env` parsing, Node filesystem adapter, default config paths, runtime config persistence, and precedence tests.
 - [x] Add SQLite schema, repositories, migrations/version table, and retention pruning.
-  - Implementation note: use `node:sqlite` `DatabaseSync` at the adapter edge, hidden behind async-shaped repository interfaces.
-  - Implementation note: parse persisted JSON records through boundary schemas when reading them back from SQLite.
-  - Implementation note: store schema migrations in a version table and keep retention pruning explicit so tests can exercise it with temp databases.
-  - Implementation note: use SQLite `STRICT` tables consistently so SQLite rejects basic column type mismatches before repository/domain validation.
-  - Implementation note: storage repository tests should focus on meaningful upsert conflict, validation, and transaction rollback behavior.
-  - Implementation note: reusable domain model fixtures live close to the domain models and should be imported by feature tests instead of duplicated.
-  - Implementation note: keep storage repository classes in class-matched files with matching colocated test files.
-  - Implementation note: shared row-parsing helpers exist to keep SQLite row-shape checks consistent before JSON parsing and Zod boundary validation.
-  - Implementation note: notification upserts must handle duplicate source fingerprints because repeated polling may generate a new local notification ID for the same source activity.
+  - use `node:sqlite` `DatabaseSync` at the adapter edge, hidden behind async-shaped repository interfaces.
+  - parse persisted JSON records through boundary schemas when reading them back from SQLite.
+  - store schema migrations in a version table and keep retention pruning explicit so tests can exercise it with temp databases.
+  - use SQLite `STRICT` tables consistently so SQLite rejects basic column type mismatches before repository/domain validation.
+  - storage repository tests should focus on meaningful upsert conflict, validation, and transaction rollback behavior.
+  - reusable domain model fixtures live close to the domain models and should be imported by feature tests instead of duplicated.
+  - keep storage repository classes in class-matched files with matching colocated test files.
+  - shared row-parsing helpers exist to keep SQLite row-shape checks consistent before JSON parsing and Zod boundary validation.
+  - notification upserts must handle duplicate source fingerprints because repeated polling may generate a new local notification ID for the same source activity.
   - Completed storage module adds the schema migration table, SQLite database opener, repositories for threads, notifications, raw payloads, read state, and team membership cache, plus retention pruning with temp SQLite database tests.
-- [ ] Add JSONL daily logger.
+- [x] Add JSONL daily logger.
+  - logger writes boundary-validated `LogEvent` records as append-only JSONL to daily files named `YYYY-MM-DD.jsonl`.
+  - logger filesystem writes belong behind a small adapter so event creation and path selection remain testable.
+  - Completed logger module adds `DailyJsonlLogger`, an append-only Node file writer, and tests for timestamping, date partitioning, validation failures, and directory creation.
 - [ ] Add Octokit REST adapter with PAT auth, pagination, conditional requests where useful, concurrency limit 4, backoff, and API status events.
 - [ ] Add GitHub source fetchers for PRs, activity/timeline data, reviews/comments, checks, and teams.
 - [ ] Add source mappers, local notification model, fingerprints, raw JSON storage, warnings, and actor-exclusion policy.

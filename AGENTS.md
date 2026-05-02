@@ -2,13 +2,18 @@
 
 ## Critical Agent Rules
 
-- CRITICAL: Never guess. Confirm assumptions first.
+- CRITICAL: Never guess. Confirm assumptions first
 - CRITICAL: You must update AGENTS.md and docs/plan.md when given instructions to make changes or take a different direction
-- CRITICAL: Always record new learnings first; general learnings in AGENTS.md, implementation-specific learning in docs/plan.md. Ensure the learnings do not already exist to avoid duplicate memories. Raise the importance of existing learnings when being reminded.
-- CRITICAL: Do not add requirements, expectations, or preferences.
-- CRITICAL: Request review after each completed task.
-- CRITICAL: Only perform Git operations of any kind when explicitly requested. Do not execute any git commands unless explicitly asked. If asked to commit; use Conventional Commit message format. Do not rebase or force-push.
-- CRITICAL: If the implementation for meeting a particular requirement or task becomes to complex, pause and collaborate with the human to find simpler, alternative approaches.
+- CRITICAL: Always record new learnings first
+- CRITICAL: General, project-wide learnings not specific to a single feature or file go in AGENTS.md
+- CRITICAL: Implementation-specific learning go in docs/plan.md
+- CRITICAL: Do not duplicate learnings within and across files. When reminded of existing learnings, raise their importance
+- CRITICAL: Do not add requirements, expectations, or preferences
+- CRITICAL: Request review after each completed task
+- CRITICAL: Do not execute any git commands unless explicitly asked
+- CRITICAL: If asked to commit, use Conventional Commit message format
+- CRITICAL: Do not rebase or force-push
+- CRITICAL: If the implementation for meeting a particular requirement or task becomes to complex, pause and collaborate with the human to find simpler, alternative approaches
 
 ## Project Structure & Module Organization
 
@@ -53,10 +58,10 @@
 - Treat in-memory state as immutable; update by copying, never by mutation.
 - Use descriptive names: `notificationRepository`, `githubActivitySource`, `renderRows`.
 - Do not pass anonymous object shapes across module boundaries.
+- Prefer simple over complex implementations. Go with the minimum that could possibly work correctly.
 - Use SQLite `STRICT` tables consistently for storage schemas so SQLite enforces basic column storage types before repository/domain validation.
-- Notification storage deduplicates by deterministic source fingerprint because repeated polling can regenerate local notification IDs for the same source activity.
-- Centralize SQLite row parsing helpers so repositories share row-shape checks before schema/domain parsing.
-- Logger adapters should append boundary-validated JSONL events to daily files and keep filesystem writes at the adapter edge.
+- Document non-obvious behavior, such as lifecycle events, cache-validation semantics, and other complexities.
+- Use `Options` naming for constructor configuration objects.
 
 ## Testing Guidelines
 

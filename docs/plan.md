@@ -80,7 +80,10 @@
 
 - Poll GitHub repo/PR/activity/timeline/check/team APIs.
 - Do not use GitHub notification-thread endpoints in v1.
-- Poll open PRs plus closed/merged PRs updated in the last 7 days.
+- Each poll reads the raw GitHub activity queue first and processes newest events.
+- Use raw activity events to decide which PRs need detail refreshes, including new PRs and updated PRs already known locally.
+- Do not enumerate every PR during normal polling unless activity data is insufficient.
+- Run the small number of PR detail requests serially in the background; no batching or request concurrency is needed for v1 polling.
 - Backfill first run:
   - open PRs
   - 7 calendar days of supported activity
@@ -291,7 +294,15 @@
   - logger writes boundary-validated `LogEvent` records as append-only JSONL to daily files named `YYYY-MM-DD.jsonl`.
   - logger filesystem writes belong behind a small adapter so event creation and path selection remain testable.
   - Completed logger module adds `DailyJsonlLogger`, an append-only Node file writer, and tests for timestamping, date partitioning, validation failures, and directory creation.
-- [ ] Add Octokit REST adapter with PAT auth, pagination, conditional requests where useful, concurrency limit 4, backoff, and API status events.
+- [x] Add Octokit REST adapter with PAT auth, pagination, conditional requests where useful, backoff, and API status events.
+  - use `@octokit/rest` as the edge dependency and keep higher-level GitHub modules behind a small testable client interface.
+  - emit API status lifecycle events for request start, success, failure, and retry/backoff so the TUI can derive idle/active/failed/stalled state later.
+  - support conditional request headers through caller-provided ETags/last-modified values and expose response cache validators.
+  - keep request flow serial and simple; normal polling starts from raw activity and only performs a small number of PR detail requests.
+  - document lifecycle, retry/backoff, and conditional-cache behavior in the adapter because these choices affect future fetchers and TUI status handling.
+  - preserve cache validators for paginated reads and honor GitHub `retry-after` / `x-ratelimit-reset` headers instead of retrying generic 403 responses.
+  - name constructor configuration objects as options, such as `GitHubRestClientOptions`.
+  - Completed GitHub adapter adds a PAT-authenticated `OctokitRestClient`, injectable transport, pagination support, conditional request headers, response cache validator exposure, retry/backoff, and lifecycle event tests.
 - [ ] Add GitHub source fetchers for PRs, activity/timeline data, reviews/comments, checks, and teams.
 - [ ] Add source mappers, local notification model, fingerprints, raw JSON storage, warnings, and actor-exclusion policy.
 - [ ] Add replacement/ejection policies for checks, merged PRs, and closed PRs.

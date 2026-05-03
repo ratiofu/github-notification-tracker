@@ -1,9 +1,11 @@
-import { SourceFingerprintSchema } from "../domain/shared.js"
+import type { GitHubEntityId, SourceFingerprint } from "../domain/shared.js"
+import type { GitHubSourceKind } from "../domain/github-source.js"
+import type { LocalNotificationType } from "../domain/notification.js"
 
 export interface SourceFingerprintInput {
-  readonly entityId: number | string
-  readonly sourceKind: string
-  readonly type: string
+  readonly entityId: GitHubEntityId
+  readonly sourceKind: GitHubSourceKind
+  readonly type: LocalNotificationType
 }
 
 /**
@@ -12,10 +14,6 @@ export interface SourceFingerprintInput {
  * It deliberately excludes the random local notification ID so repository upserts can collapse
  * repeated GitHub activity back onto the same stored notification.
  */
-export function createSourceFingerprint(
-  input: SourceFingerprintInput,
-): ReturnType<typeof SourceFingerprintSchema.parse> {
-  return SourceFingerprintSchema.parse(
-    `${input.sourceKind}:${input.type}:${String(input.entityId)}`,
-  )
+export function createSourceFingerprint(input: SourceFingerprintInput): SourceFingerprint {
+  return `${input.sourceKind}:${input.type}:${String(input.entityId)}`
 }

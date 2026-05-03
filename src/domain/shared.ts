@@ -14,7 +14,7 @@ export const GitHubEntityIdSchema = z.union([
   z.string().min(MINIMUM_TEXT_LENGTH),
 ])
 
-export const LocalNotificationIdSchema = z.string().regex(/^[A-Za-z0-9_-]{21}$/)
+export const LocalNotificationIdSchema = z.string().regex(/^[A-Za-z0-9_-]{16}$/)
 
 export const SourceFingerprintSchema = z.string().min(MINIMUM_TEXT_LENGTH)
 export const NotificationThreadIdSchema = z.string().min(MINIMUM_TEXT_LENGTH)

@@ -75,7 +75,7 @@ async function returnsUndefinedForMissingNotifications(): Promise<void> {
   const storage = createTempStorage()
 
   await expect(
-    new LocalNotificationRepository(storage.db).getById("missingNotification"),
+    new LocalNotificationRepository(storage.db).getById("missingNotif00001"),
   ).resolves.toBeUndefined()
   await storage.close()
 }
@@ -109,7 +109,7 @@ function createRepeatedNotification(originalNotification: LocalNotification): Lo
   return {
     ...originalNotification,
     createdAt: "2026-05-01T00:20:00.000Z",
-    id: "localNotification0002",
+    id: "ln00000000000002",
     text: "Repeated poll payload",
     title: "Repeated source activity",
   }

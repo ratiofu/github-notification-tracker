@@ -32,7 +32,7 @@ export function createThreadFixture(
   const pullRequest = createPullRequestMetadataFixture(options.number ?? DEFAULT_PR_NUMBER)
 
   return {
-    notificationIds: options.notificationIds ?? ["localNotification0001"],
+    notificationIds: options.notificationIds ?? ["ln00000000000001"],
     pullRequest,
     thread: {
       id: options.id ?? "pr:acme/widgets:42",
@@ -55,7 +55,7 @@ export function createNotificationFixture(
     createdAt: options.createdAt ?? "2026-05-01T00:00:00.000Z",
     explicitTargets: [{ kind: "user", login: "tj" }],
     githubEntityId: GITHUB_COMMENT_ENTITY_ID,
-    id: options.id ?? "localNotification0001",
+    id: options.id ?? "ln00000000000001",
     isRead: false,
     parentPr: thread.pullRequest,
     parentPrState: "open",

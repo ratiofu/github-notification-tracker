@@ -39,7 +39,7 @@ function usesDefaultFactories(): void {
 function mapsTeamRequests(): void {
   const result = mapGitHubSources({
     authenticatedUserLogin: "tj",
-    createNotificationId: () => "localNotification0001",
+    createNotificationId: () => "ln00000000000001",
     now: () => new Date(UPDATED_AT),
     pullRequestSource: createPullRequestSource(UPDATED_AT),
     sources: [createTeamReviewRequest()],

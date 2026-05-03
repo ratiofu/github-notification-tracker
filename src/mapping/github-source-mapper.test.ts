@@ -21,7 +21,7 @@ const RAW_SOURCE_INDEX = 1
 const TIMELINE_CLOSED_ID = 808
 const TIMELINE_MERGED_ID = 707
 const TIMELINE_REVIEW_ID = 606
-const VALID_LOCAL_ID = "localNotification0001"
+const VALID_LOCAL_ID = "ln00000000000001"
 
 type JsonValue = GitHubSourcePayloadWrapper["payload"]
 describe("GitHub source mapping", () => {

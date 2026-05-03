@@ -6,7 +6,7 @@ import { LocalNotificationRepository } from "./local-notification-repository.js"
 import { PullRequestThreadRepository } from "./pull-request-thread-repository.js"
 import { ReadStateRepository } from "./read-state-repository.js"
 
-const LOCAL_NOTIFICATION_ID = "localNotification0001"
+const LOCAL_NOTIFICATION_ID = "ln00000000000001"
 const READ_AT = "2026-05-01T00:12:00.000Z"
 const STRICT_TYPE_ERROR =
   /cannot store TEXT value in INTEGER column read_states\.is_read|cannot store TEXT value in INTEGER column/
@@ -69,7 +69,7 @@ async function returnsUndefinedForMissingReadStates(): Promise<void> {
   const storage = createTempStorage()
 
   await expect(
-    new ReadStateRepository(storage.db).get("missingNotification"),
+    new ReadStateRepository(storage.db).get("missingNotif00001"),
   ).resolves.toBeUndefined()
   await storage.close()
 }

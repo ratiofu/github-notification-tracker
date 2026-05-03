@@ -11,7 +11,7 @@ import { TeamMembershipCacheSchema } from "./team-cache.js"
 
 const timestamp = "2026-05-02T05:00:00.000Z"
 const url = "https://github.com/acme/widgets/pull/42"
-const notificationId = "Abcdefghijklmnopqrs_1"
+const notificationId = "Abcdefghijklmn_1"
 const ACTOR_ID = 123
 const EXPECTED_PARTICIPANT_COUNT = 1
 const PULL_REQUEST_NUMBER = 42

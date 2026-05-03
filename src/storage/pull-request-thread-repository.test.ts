@@ -46,7 +46,7 @@ async function preservesNotificationIds(): Promise<void> {
   const storage = createTempStorage()
   const repository = new PullRequestThreadRepository(storage.db)
   const originalThread = createThreadFixture({
-    notificationIds: ["localNotification0001", "localNotification0002"],
+    notificationIds: ["ln00000000000001", "ln00000000000002"],
   })
   const partialUpdate = createPartialThreadUpdate(originalThread)
   const expectedThread = createExpectedMergedThread(partialUpdate)
@@ -84,7 +84,7 @@ async function parsesPersistedJsonOnRead(): Promise<void> {
 function createPartialThreadUpdate(originalThread: PullRequestThread): PullRequestThread {
   return {
     ...originalThread,
-    notificationIds: ["localNotification0003"],
+    notificationIds: ["ln00000000000003"],
     thread: {
       ...originalThread.thread,
       sourceUpdatedAt: "2026-05-01T00:20:00.000Z",
@@ -95,14 +95,14 @@ function createPartialThreadUpdate(originalThread: PullRequestThread): PullReque
 function createExpectedMergedThread(partialUpdate: PullRequestThread): PullRequestThread {
   return {
     ...partialUpdate,
-    notificationIds: ["localNotification0001", "localNotification0002", "localNotification0003"],
+    notificationIds: ["ln00000000000001", "ln00000000000002", "ln00000000000003"],
   }
 }
 
 function createUpdatedThread(originalThread: PullRequestThread): PullRequestThread {
   return {
     ...originalThread,
-    notificationIds: ["localNotification0001", "localNotification0002"],
+    notificationIds: ["ln00000000000001", "ln00000000000002"],
     pullRequest: {
       ...originalThread.pullRequest,
       title: "Updated PR title",

@@ -108,7 +108,7 @@
   - merged PRs prune prior non-comment notifications, keep `PR merged`, allow future comments
   - closed-unmerged PRs mirror merged behavior with `PR closed`
 - Local identity:
-  - 21-character URL-safe random local ID
+  - 16-character URL-safe local notification ID encoded from 6 bytes of `Date.now()` milliseconds plus 6 random bytes
   - deterministic source fingerprint for dedup/replacement
   - store raw source JSON for reprocessing
 - Filtering:
@@ -323,6 +323,8 @@
   - keep mapping pure: return local notifications, raw payload records, thread records, and warnings; persistence stays in repositories.
   - source fingerprints are deterministic from GitHub source kind plus stable GitHub entity IDs so repeated polling deduplicates through storage.
   - actor-exclusion runs during mapping so authenticated-user-originated source records do not become local notifications.
+  - local notification IDs are 12 bytes encoded as 16 base64url characters: 6 timestamp bytes followed by 6 random bytes.
+  - the local ID generator constructs this shape directly; schema validation remains at persistence/domain boundaries and tests cover generator drift.
   - PR thread IDs should prefer stable GitHub PR entity IDs over mutable repo/name plus PR number.
   - team review-request targets derive their org from the configured repo owner, not a fixed placeholder org.
   - persisted PR thread upserts must preserve existing child notification IDs when later polls map only a partial source batch.

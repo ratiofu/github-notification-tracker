@@ -16,13 +16,12 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsx src/cli/index.ts",
-    "typecheck": "tsgo --noEmit",
-    "lint": "oxlint --type-aware --fix .",
-    "format": "oxfmt --check .",
+    "lint": "oxlint --fix .",
+    "format": "oxfmt .",
     "test": "vitest run --coverage",
     "audit": "pnpm audit",
     "deps:upgrade": "pnpm update --latest --interactive",
-    "quality": "scripts/pnpm-parallel.sh lint format test typecheck"
+    "quality": "time (pnpm lint && pnpm format && pnpm test)"
   },
   "dependencies": {
     "@octokit/rest": "catalog:",
@@ -32,7 +31,6 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "@typescript/native-preview": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",

@@ -1,31 +1,35 @@
-import type {
-  LocalNotification,
-  PullRequestMetadata,
-  PullRequestThread,
-  RawGitHubPayload,
-  TeamMembershipCacheEntry,
-} from "./index.js";
+import type { PullRequestMetadata, PullRequestThread } from "./notification-thread.js"
+import type { LocalNotification } from "./notification.js"
+import type { RawGitHubPayload } from "./shared.js"
+import type { TeamMembershipCacheEntry } from "./team-cache.js"
+
+const COMMENT_PAYLOAD_ID = 1
+const DEFAULT_PR_NUMBER = 42
+const GITHUB_COMMENT_ENTITY_ID = 2002
+const MONA_USER_ID = 99
+const OCTOCAT_USER_ID = 1001
+const PLATFORM_TEAM_ID = 123
 
 export interface PullRequestThreadFixtureOptions {
-  readonly id?: string;
-  readonly notificationIds?: readonly string[];
-  readonly number?: number;
-  readonly sourceUpdatedAt?: string;
+  readonly id?: string
+  readonly notificationIds?: readonly string[]
+  readonly number?: number
+  readonly sourceUpdatedAt?: string
 }
 
 export interface LocalNotificationFixtureOptions {
-  readonly createdAt?: string;
-  readonly id?: string;
-  readonly sourceFingerprint?: string;
-  readonly sourceTimestamp?: string;
-  readonly thread?: PullRequestThread;
+  readonly createdAt?: string
+  readonly id?: string
+  readonly sourceFingerprint?: string
+  readonly sourceTimestamp?: string
+  readonly thread?: PullRequestThread
 }
 
 /** Reusable valid domain fixtures keep repository and mapper tests aligned with schemas. */
 export function createThreadFixture(
   options: PullRequestThreadFixtureOptions = {},
 ): PullRequestThread {
-  const pullRequest = createPullRequestMetadataFixture(options.number ?? 42);
+  const pullRequest = createPullRequestMetadataFixture(options.number ?? DEFAULT_PR_NUMBER)
 
   return {
     notificationIds: options.notificationIds ?? ["localNotification0001"],
@@ -38,56 +42,40 @@ export function createThreadFixture(
       targetUrl: pullRequest.url,
       title: pullRequest.title,
     },
-  };
+  }
 }
 
 export function createNotificationFixture(
   options: LocalNotificationFixtureOptions = {},
 ): LocalNotification {
-  const thread = options.thread ?? createThreadFixture();
+  const thread = options.thread ?? createThreadFixture()
 
   return {
-    actor: {
-      id: 1001,
-      login: "octocat",
-      url: "https://github.com/octocat",
-    },
+    actor: createOctocatActor(),
     createdAt: options.createdAt ?? "2026-05-01T00:00:00.000Z",
     explicitTargets: [{ kind: "user", login: "tj" }],
-    githubEntityId: 2002,
+    githubEntityId: GITHUB_COMMENT_ENTITY_ID,
     id: options.id ?? "localNotification0001",
     isRead: false,
     parentPr: thread.pullRequest,
     parentPrState: "open",
-    participants: [
-      {
-        id: 1001,
-        kind: "user",
-        login: "octocat",
-      },
-    ],
+    participants: [createOctocatParticipant()],
     readAt: null,
     sourceFingerprint: options.sourceFingerprint ?? "comment:1",
-    sourceJsonReferences: [
-      {
-        sourceId: "1",
-        sourceKind: "pull_request_comment",
-        storageKey: "pulls/42/comment/1",
-      },
-    ],
+    sourceJsonReferences: [createCommentReference()],
     sourceTimestamp: options.sourceTimestamp ?? "2026-05-01T00:00:00.000Z",
     targetUrl: "https://github.com/acme/widgets/pull/42#issuecomment-1",
     text: "Please take a look",
     threadId: thread.thread.id,
     title: "PR comment",
     type: "pr_comment",
-  };
+  }
 }
 
 export function createPullRequestMetadataFixture(number: number): PullRequestMetadata {
   return {
     author: {
-      id: 99,
+      id: MONA_USER_ID,
       login: "mona",
       url: "https://github.com/mona",
     },
@@ -100,7 +88,7 @@ export function createPullRequestMetadataFixture(number: number): PullRequestMet
     state: "open",
     title: `Add feature ${number}`,
     url: `https://github.com/acme/widgets/pull/${number}`,
-  };
+  }
 }
 
 export function createRawPayloadFixture(): RawGitHubPayload {
@@ -111,9 +99,9 @@ export function createRawPayloadFixture(): RawGitHubPayload {
     id: "1",
     payload: {
       body: "Please take a look",
-      id: 1,
+      id: COMMENT_PAYLOAD_ID,
     },
-  };
+  }
 }
 
 export function createTeamEntryFixture(): TeamMembershipCacheEntry {
@@ -127,8 +115,32 @@ export function createTeamEntryFixture(): TeamMembershipCacheEntry {
       name: "Platform",
       org: "acme",
       slug: "platform",
-      teamId: 123,
+      teamId: PLATFORM_TEAM_ID,
       url: "https://github.com/orgs/acme/teams/platform",
     },
-  };
+  }
+}
+
+function createOctocatActor() {
+  return {
+    id: OCTOCAT_USER_ID,
+    login: "octocat",
+    url: "https://github.com/octocat",
+  }
+}
+
+function createOctocatParticipant() {
+  return {
+    id: OCTOCAT_USER_ID,
+    kind: "user",
+    login: "octocat",
+  } as const
+}
+
+function createCommentReference() {
+  return {
+    sourceId: "1",
+    sourceKind: "pull_request_comment",
+    storageKey: "pulls/42/comment/1",
+  }
 }

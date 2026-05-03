@@ -1,4 +1,6 @@
-import type { DatabaseSync } from "node:sqlite";
+import type { DatabaseSync } from "node:sqlite"
+
+const INITIAL_SCHEMA_VERSION = 1
 
 const migrations = [
   {
@@ -49,55 +51,69 @@ const migrations = [
         PRIMARY KEY (repo, org, slug)
       ) STRICT;
     `,
-    version: 1,
+    version: INITIAL_SCHEMA_VERSION,
   },
-] as const;
+] as const
 
 /** Applies ordered schema migrations and records each completed version. */
 export function migrateDatabase(db: DatabaseSync, appliedAt = new Date().toISOString()): void {
+  ensureMigrationTable(db)
+
+  const appliedVersions = readAppliedVersions(db)
+
+  for (const migration of migrations) {
+    if (!appliedVersions.has(migration.version)) {
+      applyMigration(db, migration, appliedAt)
+    }
+  }
+}
+
+function ensureMigrationTable(db: DatabaseSync): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
       version INTEGER PRIMARY KEY,
       applied_at TEXT NOT NULL
     ) STRICT;
-  `);
+  `)
+}
 
-  const appliedVersions = new Set(
-    db
-      .prepare("SELECT version FROM schema_migrations")
-      .all()
-      .map((row) => readNumber(row, "version")),
-  );
+function readAppliedVersions(db: DatabaseSync): ReadonlySet<number> {
+  const versions = db
+    .prepare("SELECT version FROM schema_migrations")
+    .all()
+    .map((row) => readNumber(row, "version"))
 
-  for (const migration of migrations) {
-    if (appliedVersions.has(migration.version)) {
-      continue;
-    }
+  return new Set(versions)
+}
 
-    db.exec("BEGIN");
-    try {
-      db.exec(migration.sql);
-      db.prepare("INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)").run(
-        migration.version,
-        appliedAt,
-      );
-      db.exec("COMMIT");
-    } catch (error) {
-      db.exec("ROLLBACK");
-      throw error;
-    }
+function applyMigration(
+  db: DatabaseSync,
+  migration: (typeof migrations)[number],
+  appliedAt: string,
+): void {
+  db.exec("BEGIN")
+  try {
+    db.exec(migration.sql)
+    db.prepare("INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)").run(
+      migration.version,
+      appliedAt,
+    )
+    db.exec("COMMIT")
+  } catch (error) {
+    db.exec("ROLLBACK")
+    throw error
   }
 }
 
 function readNumber(row: unknown, key: string): number {
   if (typeof row !== "object" || row === null || !(key in row)) {
-    throw new Error(`SQLite row is missing ${key}`);
+    throw new Error(`SQLite row is missing ${key}`)
   }
 
-  const value = row[key as keyof typeof row];
+  const value = row[key as keyof typeof row]
   if (typeof value !== "number") {
-    throw new Error(`SQLite row ${key} is not a number`);
+    throw new TypeError(`SQLite row ${key} is not a number`)
   }
 
-  return value;
+  return value
 }

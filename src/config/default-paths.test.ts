@@ -1,12 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest"
 
-import { getDefaultConfigPaths } from "./default-paths.js";
+import { getDefaultConfigPaths } from "./default-paths.js"
 
-describe("getDefaultConfigPaths", () => {
+describe("default config paths", () => {
   it("returns config and dotenv paths under the ght config directory", () => {
-    expect(getDefaultConfigPaths("/home/alice")).toEqual({
+    expect(getDefaultConfigPaths("/home/alice")).toStrictEqual({
       configPath: "/home/alice/.config/ght/config.yaml",
       dotenvPath: "/home/alice/.config/ght/.env",
-    });
-  });
-});
+    })
+  })
+})

@@ -1,19 +1,26 @@
-import type { DatabaseSync } from "node:sqlite";
+import { TeamMembershipCacheEntrySchema, TeamMembershipCacheSchema } from "../domain/team-cache.js"
+import type { DatabaseSync } from "node:sqlite"
+import type { DeepReadonly } from "../domain/readonly.js"
+import type { RepoName } from "../domain/shared.js"
+import { parseJsonRow } from "./row-parsing.js"
+import { settleSynchronousStatement } from "./db-util.js"
 
-import { TeamMembershipCacheEntrySchema, TeamMembershipCacheSchema } from "../domain/index.js";
-import type { RepoName, TeamMembershipCache, TeamMembershipCacheEntry } from "../domain/index.js";
-import { parseJsonRow } from "./row-parsing.js";
+type TeamMembershipCache = DeepReadonly<ReturnType<typeof TeamMembershipCacheSchema.parse>>
+type TeamMembershipCacheEntry = DeepReadonly<
+  ReturnType<typeof TeamMembershipCacheEntrySchema.parse>
+>
 
 /** Caches team membership entries used to expand participant filters. */
 export class TeamMembershipCacheRepository {
-  readonly #db: DatabaseSync;
+  readonly #db: DatabaseSync
 
   constructor(db: DatabaseSync) {
-    this.#db = db;
+    this.#db = db
   }
 
   async upsert(repo: RepoName, entry: TeamMembershipCacheEntry): Promise<void> {
-    const parsed = TeamMembershipCacheEntrySchema.parse(entry);
+    const parsed = TeamMembershipCacheEntrySchema.parse(entry)
+
     this.#db
       .prepare(`
         INSERT INTO team_membership_cache_entries (
@@ -37,7 +44,8 @@ export class TeamMembershipCacheRepository {
         parsed.expiresAt,
         parsed.syncedAt,
         JSON.stringify(parsed),
-      );
+      )
+    await settleSynchronousStatement()
   }
 
   async listByRepo(repo: RepoName): Promise<TeamMembershipCache> {
@@ -48,11 +56,12 @@ export class TeamMembershipCacheRepository {
         WHERE repo = ?
         ORDER BY org ASC, slug ASC
       `)
-      .all(repo);
+      .all(repo)
+    await settleSynchronousStatement()
 
     return TeamMembershipCacheSchema.parse({
       entries: rows.map((row) => parseJsonRow(row, TeamMembershipCacheEntrySchema)),
       repo,
-    });
+    })
   }
 }

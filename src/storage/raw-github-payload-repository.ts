@@ -1,19 +1,22 @@
-import type { DatabaseSync } from "node:sqlite";
+import type { DatabaseSync } from "node:sqlite"
 
-import { RawGitHubPayloadSchema } from "../domain/index.js";
-import type { RawGitHubPayload } from "../domain/index.js";
-import { parseOptionalJsonRow } from "./row-parsing.js";
+import type { DeepReadonly } from "../domain/readonly.js"
+import { RawGitHubPayloadSchema } from "../domain/shared.js"
+import { parseOptionalJsonRow } from "./row-parsing.js"
+import { settleSynchronousStatement } from "./db-util.js"
+
+type RawGitHubPayload = DeepReadonly<ReturnType<typeof RawGitHubPayloadSchema.parse>>
 
 /** Stores raw GitHub payloads by the storage keys referenced from generated notifications. */
 export class RawGitHubPayloadRepository {
-  readonly #db: DatabaseSync;
+  readonly #db: DatabaseSync
 
   constructor(db: DatabaseSync) {
-    this.#db = db;
+    this.#db = db
   }
 
   async upsert(storageKey: string, payload: RawGitHubPayload): Promise<void> {
-    const parsed = RawGitHubPayloadSchema.parse(payload);
+    const parsed = RawGitHubPayloadSchema.parse(payload)
     this.#db
       .prepare(`
         INSERT INTO raw_github_payloads (storage_key, source_id, fetched_at, payload_json)
@@ -23,14 +26,16 @@ export class RawGitHubPayloadRepository {
           fetched_at = excluded.fetched_at,
           payload_json = excluded.payload_json
       `)
-      .run(storageKey, parsed.id, parsed.fetchedAt, JSON.stringify(parsed));
+      .run(storageKey, parsed.id, parsed.fetchedAt, JSON.stringify(parsed))
+    await settleSynchronousStatement()
   }
 
   async getByStorageKey(storageKey: string): Promise<RawGitHubPayload | undefined> {
     const row = this.#db
       .prepare("SELECT payload_json FROM raw_github_payloads WHERE storage_key = ?")
-      .get(storageKey);
+      .get(storageKey)
+    await settleSynchronousStatement()
 
-    return parseOptionalJsonRow(row, RawGitHubPayloadSchema);
+    return parseOptionalJsonRow(row, RawGitHubPayloadSchema)
   }
 }

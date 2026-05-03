@@ -1,12 +1,12 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest"
 
 describe("cli entry", () => {
   it("prints the scaffold CLI message", async () => {
-    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const write = vi.spyOn(process.stdout, "write").mockImplementation(() => true)
 
-    await import("./index.js");
+    await import("./index.js")
 
-    expect(log).toHaveBeenCalledWith("ght scaffold ready");
-    log.mockRestore();
-  });
-});
+    expect(write).toHaveBeenCalledWith("ght scaffold ready\n")
+    write.mockRestore()
+  })
+})

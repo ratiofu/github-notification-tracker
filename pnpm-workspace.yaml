@@ -4,7 +4,6 @@ packages:
 catalog:
   "@octokit/rest": 22.0.1
   "@types/node": 25.6.0
-  "@typescript/native-preview": 7.0.0-dev.20260501.1
   "@vitest/coverage-v8": 4.1.5
   dotenv: 17.4.2
   oxfmt: 0.47.0

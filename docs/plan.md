@@ -163,12 +163,15 @@
 - Node 25+.
 - pnpm single-package workspace.
 - pnpm catalogs with pinned versions only; no ranges.
+- Node-targeted TypeScript ESM imports use explicit `.js` extensions so emitted JavaScript runs under Node without bundler-only resolution.
 - Do not pass an explicit pnpm `--store-dir`; rely on the active project/session pnpm configuration.
 - Run `pnpm approve-builds` when pnpm reports ignored build scripts so workspace build-script policy is recorded.
 - `pnpm lint` runs oxlint in fix mode.
-- `pnpm lint` runs oxlint with type-aware checks.
-- TypeScript tooling uses the TypeScript 7 release candidate package named `tsgo`.
+- `pnpm lint` runs oxlint with type-aware and experimental type-check diagnostics; do not keep a separate typecheck command.
+- `pnpm format` uses oxfmt with 100-column wrapping and semicolons omitted except when syntax requires them.
+- Magic numbers are lint warnings, including in tests; use named constants unless a narrow exception is justified.
 - Package as tsup-built ESM CLI with `bin.ght`.
+- Shared repeated primitive constants live in `src/constants.ts`; module/test fixture constants stay local when they are not reused.
 - Use:
   - Ink for persistent TUI
   - `@clack/prompts` only for optional non-persistent setup prompts
@@ -180,19 +183,18 @@
   - picocolors for simple color constants if useful
   - oxlint
   - oxfmt
-  - TypeScript
+  - TypeScript diagnostics through oxlint type-check
   - Vitest with V8 coverage on by default (all tests run with coverage unless explicitly excluded)
   - use `vitest-mock-extended` for mock utilities (not `ts-mockito`)
 - Scripts:
   - `pnpm build`
   - `pnpm dev`
-  - `pnpm typecheck`
   - `pnpm lint`
   - `pnpm format`
   - `pnpm test`
   - `pnpm audit`
   - `pnpm deps:upgrade`
-  - `pnpm quality` runs lint, format, test with coverage, typecheck via `scripts/pnpm-parallel.sh`
+  - `pnpm quality` runs lint, format, and test with coverage sequentially to avoid write races
 - Coverage gate:
   - 90% lines
   - 90% branches
@@ -200,6 +202,10 @@
 ## Architecture
 
 - Functional core, imperative shell.
+- Use named exports for module boundaries; default exports are disallowed except for CommonJS TypeScript config files where tool-native configuration expects them.
+- Use explicit `.js` extensions for relative TypeScript ESM imports.
+- Use kebab-case filenames.
+- Reusable, feature-neutral helpers live in `src/util/` with colocated tests; adapter-specific utilities stay near their adapter.
 - Organize source files into logical directories under `src/`; avoid accumulating unrelated modules directly under `src/`.
 - Colocate module tests beside the modules they test; reserve top-level `test/` for cross-module integration tests and shared fixtures.
 - Core modules:
@@ -264,8 +270,7 @@
   - oxlint should run in type-aware mode with `typescript/no-deprecated` denied.
   - project commands should run under NVM Node 25 using `.nvmrc`; this machine also has Node 24 active by default in some shells.
   - `oxfmt` uses `.oxfmtrc.json` as its default configuration filename.
-  - use the TypeScript 7 release candidate toolchain package named `tsgo` for TypeScript commands.
-  - Completed scaffold uses `@typescript/native-preview` for the `tsgo` binary, `tsup` for ESM CLI bundling, `oxlint`, `oxfmt`, Vitest V8 coverage with 90% line/branch thresholds, and `scripts/pnpm-parallel.sh` for `pnpm quality`.
+  - Completed scaffold uses oxlint's TypeScript diagnostics, `tsup` for ESM CLI bundling, `oxfmt`, Vitest V8 coverage with 90% line/branch thresholds, and a sequential `pnpm quality` script.
 - [x] Define Zod-backed domain schemas and inferred TypeScript model types before implementing feature modules.
   - domain schema modules should be pure and live under `src/domain/`, with colocated schema tests.
   - add Zod as a runtime dependency through the pinned pnpm catalog before defining boundary schemas.
@@ -293,6 +298,7 @@
   - keep storage repository classes in class-matched files with matching colocated test files.
   - shared row-parsing helpers exist to keep SQLite row-shape checks consistent before JSON parsing and Zod boundary validation.
   - notification upserts must handle duplicate source fingerprints because repeated polling may generate a new local notification ID for the same source activity.
+  - shared async-settling for sync SQLite statements lives in `src/storage/db-util.ts` so repositories do not import database-opening/migration code just to keep async-shaped APIs.
   - Completed storage module adds the schema migration table, SQLite database opener, repositories for threads, notifications, raw payloads, read state, and team membership cache, plus retention pruning with temp SQLite database tests.
 - [x] Add JSONL daily logger.
   - logger writes boundary-validated `LogEvent` records as append-only JSONL to daily files named `YYYY-MM-DD.jsonl`.

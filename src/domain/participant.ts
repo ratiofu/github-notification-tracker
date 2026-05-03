@@ -1,12 +1,13 @@
-import { z } from "zod";
+import { GitHubEntityIdSchema, UrlSchema } from "./shared.js"
+import type { DeepReadonly } from "./readonly.js"
+import { MINIMUM_TEXT_LENGTH } from "../constants.js"
+import { z } from "zod"
 
-import type { DeepReadonly } from "./readonly.js";
-import { GitHubEntityIdSchema, UrlSchema } from "./shared.js";
-import type { GitHubEntityId } from "./shared.js";
+type GitHubEntityIdValue = DeepReadonly<z.infer<typeof GitHubEntityIdSchema>>
 
-export const ParticipantKindSchema = z.enum(["user", "team"]);
+export const ParticipantKindSchema = z.enum(["user", "team"])
 
-export const GitHubLoginSchema = z.string().min(1);
+export const GitHubLoginSchema = z.string().min(MINIMUM_TEXT_LENGTH)
 
 /**
  * Normalized user participant fields derived from GitHub user objects.
@@ -15,11 +16,11 @@ export const GitHubLoginSchema = z.string().min(1);
  */
 export const UserParticipantSchema = z.object({
   avatarUrl: UrlSchema.optional(),
-  displayName: z.string().min(1).optional(),
+  displayName: z.string().min(MINIMUM_TEXT_LENGTH).optional(),
   id: GitHubEntityIdSchema.optional(),
   kind: z.literal("user"),
   login: GitHubLoginSchema,
-});
+})
 
 /**
  * Normalized team participant fields derived from GitHub team responses.
@@ -29,17 +30,17 @@ export const UserParticipantSchema = z.object({
 export const TeamParticipantSchema = z.object({
   kind: z.literal("team"),
   members: z.array(GitHubLoginSchema).default([]),
-  name: z.string().min(1).optional(),
+  name: z.string().min(MINIMUM_TEXT_LENGTH).optional(),
   org: GitHubLoginSchema,
-  slug: z.string().min(1),
+  slug: z.string().min(MINIMUM_TEXT_LENGTH),
   teamId: GitHubEntityIdSchema.optional(),
   url: UrlSchema.optional(),
-});
+})
 
 export const ParticipantSchema = z.discriminatedUnion("kind", [
   UserParticipantSchema,
   TeamParticipantSchema,
-]);
+])
 
 export const ParticipantSelectionSchema = z.discriminatedUnion("kind", [
   z.object({
@@ -49,23 +50,23 @@ export const ParticipantSelectionSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("team"),
     org: GitHubLoginSchema,
-    slug: z.string().min(1),
+    slug: z.string().min(MINIMUM_TEXT_LENGTH),
   }),
-]);
+])
 
-export const ExplicitTargetSchema = ParticipantSelectionSchema;
+export const ExplicitTargetSchema = ParticipantSelectionSchema
 
-export type ParticipantKind = DeepReadonly<z.infer<typeof ParticipantKindSchema>>;
-export type GitHubLogin = DeepReadonly<z.infer<typeof GitHubLoginSchema>>;
-export type UserParticipant = DeepReadonly<z.infer<typeof UserParticipantSchema>>;
-export type TeamParticipant = DeepReadonly<z.infer<typeof TeamParticipantSchema>>;
-export type Participant = DeepReadonly<z.infer<typeof ParticipantSchema>>;
-export type ParticipantSelection = DeepReadonly<z.infer<typeof ParticipantSelectionSchema>>;
-export type ExplicitTarget = DeepReadonly<z.infer<typeof ExplicitTargetSchema>>;
+export type ParticipantKind = DeepReadonly<z.infer<typeof ParticipantKindSchema>>
+export type GitHubLogin = DeepReadonly<z.infer<typeof GitHubLoginSchema>>
+export type UserParticipant = DeepReadonly<z.infer<typeof UserParticipantSchema>>
+export type TeamParticipant = DeepReadonly<z.infer<typeof TeamParticipantSchema>>
+export type Participant = DeepReadonly<z.infer<typeof ParticipantSchema>>
+export type ParticipantSelection = DeepReadonly<z.infer<typeof ParticipantSelectionSchema>>
+export type ExplicitTarget = DeepReadonly<z.infer<typeof ExplicitTargetSchema>>
 
 export interface ParticipantFilterIndex {
-  readonly teamIds: ReadonlySet<GitHubEntityId>;
-  readonly teamSlugs: ReadonlySet<string>;
-  readonly userIds: ReadonlySet<GitHubEntityId>;
-  readonly userLogins: ReadonlySet<GitHubLogin>;
+  readonly teamIds: ReadonlySet<GitHubEntityIdValue>
+  readonly teamSlugs: ReadonlySet<string>
+  readonly userIds: ReadonlySet<GitHubEntityIdValue>
+  readonly userLogins: ReadonlySet<GitHubLogin>
 }

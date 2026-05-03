@@ -2,57 +2,58 @@ import type {
   GitHubPullRequestSource,
   GitHubSourceKind,
   GitHubSourcePayloadWrapper,
-  IsoDateTime,
-  RepoName,
-} from "../domain/index.js";
-import type { GitHubRestRequester, GitHubTransportHeaders } from "./types.js";
+} from "../domain/github-source.js"
+import type { GitHubRestRequester, GitHubTransportHeaders } from "./types.js"
+import type { IsoDateTime, RepoName } from "../domain/shared.js"
+
+export type { GitHubSourceKind }
 
 export interface GitHubSourceFetcherOptions {
-  readonly client: GitHubRestRequester;
-  readonly now?: () => Date;
+  readonly client: GitHubRestRequester
+  readonly now?: () => Date
 }
 
 export interface GitHubCacheValidators {
-  readonly etag?: string;
-  readonly lastModified?: string;
+  readonly etag?: string
+  readonly lastModified?: string
 }
 
 export interface GitHubRepoFetchInput {
-  readonly cache?: GitHubCacheValidators;
-  readonly perPage?: number;
-  readonly repo: RepoName;
-  readonly signal?: AbortSignal;
+  readonly cache?: GitHubCacheValidators
+  readonly perPage?: number
+  readonly repo: RepoName
+  readonly signal?: AbortSignal
 }
 
 export interface GitHubPullRequestFetchInput extends GitHubRepoFetchInput {
-  readonly pullRequestNumber: number;
+  readonly pullRequestNumber: number
 }
 
 export interface GitHubCheckRunFetchInput extends GitHubRepoFetchInput {
-  readonly headSha: string;
+  readonly headSha: string
 }
 
 export interface GitHubTeamMemberFetchInput extends GitHubRepoFetchInput {
-  readonly org: string;
-  readonly teamSlug: string;
+  readonly org: string
+  readonly teamSlug: string
 }
 
 export interface GitHubSourceFetchResult<TSource> {
-  readonly cache: GitHubCacheValidators;
-  readonly headers: GitHubTransportHeaders;
-  readonly notModified: boolean;
-  readonly sources: readonly TSource[];
-  readonly status: number;
+  readonly cache: GitHubCacheValidators
+  readonly headers: GitHubTransportHeaders
+  readonly notModified: boolean
+  readonly sources: readonly TSource[]
+  readonly status: number
 }
 
-export type GitHubGenericSourceFetchResult = GitHubSourceFetchResult<GitHubSourcePayloadWrapper>;
-export type GitHubPullRequestSourceFetchResult = GitHubSourceFetchResult<GitHubPullRequestSource>;
+export type GitHubGenericSourceFetchResult = GitHubSourceFetchResult<GitHubSourcePayloadWrapper>
+export type GitHubPullRequestSourceFetchResult = GitHubSourceFetchResult<GitHubPullRequestSource>
 
 export interface GitHubRawSourceRequest {
-  readonly input: GitHubRepoFetchInput;
-  readonly paginate?: boolean;
-  readonly route: string;
-  readonly sourceKind: GitHubSourceKind;
+  readonly input: GitHubRepoFetchInput
+  readonly paginate?: boolean
+  readonly route: string
+  readonly sourceKind: GitHubSourceKind
 }
 
-export type GitHubFetchedAt = IsoDateTime;
+export type GitHubFetchedAt = IsoDateTime

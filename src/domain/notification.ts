@@ -1,8 +1,4 @@
-import { z } from "zod";
-
-import { PullRequestMetadataSchema, PullRequestStateSchema } from "./notification-thread.js";
-import { ExplicitTargetSchema, ParticipantSchema } from "./participant.js";
-import type { DeepReadonly } from "./readonly.js";
+import { ExplicitTargetSchema, ParticipantSchema } from "./participant.js"
 import {
   GitHubActorSchema,
   GitHubEntityIdSchema,
@@ -12,7 +8,11 @@ import {
   SourceFingerprintSchema,
   SourceJsonReferenceSchema,
   UrlSchema,
-} from "./shared.js";
+} from "./shared.js"
+import { PullRequestMetadataSchema, PullRequestStateSchema } from "./notification-thread.js"
+import type { DeepReadonly } from "./readonly.js"
+import { MINIMUM_TEXT_LENGTH } from "../constants.js"
+import { z } from "zod"
 
 export const LocalNotificationTypeSchema = z.enum([
   "pr_comment",
@@ -23,7 +23,7 @@ export const LocalNotificationTypeSchema = z.enum([
   "failed_check",
   "pr_merged",
   "pr_closed",
-]);
+])
 
 /** Local notification generated from GitHub source payloads and grouped by parent PR. */
 export const LocalNotificationSchema = z.object({
@@ -41,11 +41,11 @@ export const LocalNotificationSchema = z.object({
   sourceJsonReferences: z.array(SourceJsonReferenceSchema),
   sourceTimestamp: IsoDateTimeSchema,
   targetUrl: UrlSchema,
-  text: z.string().min(1),
+  text: z.string().min(MINIMUM_TEXT_LENGTH),
   threadId: NotificationThreadIdSchema,
-  title: z.string().min(1),
+  title: z.string().min(MINIMUM_TEXT_LENGTH),
   type: LocalNotificationTypeSchema,
-});
+})
 
-export type LocalNotificationType = DeepReadonly<z.infer<typeof LocalNotificationTypeSchema>>;
-export type LocalNotification = DeepReadonly<z.infer<typeof LocalNotificationSchema>>;
+export type LocalNotificationType = DeepReadonly<z.infer<typeof LocalNotificationTypeSchema>>
+export type LocalNotification = DeepReadonly<z.infer<typeof LocalNotificationSchema>>

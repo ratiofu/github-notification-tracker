@@ -1,19 +1,22 @@
-import type { DatabaseSync } from "node:sqlite";
+import type { NotificationThreadId, RepoName } from "../domain/shared.js"
+import { parseJsonRow, parseOptionalJsonRow } from "./row-parsing.js"
+import type { DatabaseSync } from "node:sqlite"
+import type { DeepReadonly } from "../domain/readonly.js"
+import { PullRequestThreadSchema } from "../domain/notification-thread.js"
+import { settleSynchronousStatement } from "./db-util.js"
 
-import { PullRequestThreadSchema } from "../domain/index.js";
-import type { NotificationThreadId, PullRequestThread, RepoName } from "../domain/index.js";
-import { parseJsonRow, parseOptionalJsonRow } from "./row-parsing.js";
+type PullRequestThread = DeepReadonly<ReturnType<typeof PullRequestThreadSchema.parse>>
 
 /** Persists PR thread boundary records and leaves child notification storage separate. */
 export class PullRequestThreadRepository {
-  readonly #db: DatabaseSync;
+  readonly #db: DatabaseSync
 
   constructor(db: DatabaseSync) {
-    this.#db = db;
+    this.#db = db
   }
 
   async upsert(thread: PullRequestThread): Promise<void> {
-    const parsed = PullRequestThreadSchema.parse(thread);
+    const parsed = PullRequestThreadSchema.parse(thread)
     this.#db
       .prepare(`
         INSERT INTO notification_threads (id, kind, repo, source_updated_at, payload_json)
@@ -30,15 +33,17 @@ export class PullRequestThreadRepository {
         parsed.thread.repo,
         parsed.thread.sourceUpdatedAt,
         JSON.stringify(parsed),
-      );
+      )
+    await settleSynchronousStatement()
   }
 
   async getById(threadId: NotificationThreadId): Promise<PullRequestThread | undefined> {
     const row = this.#db
       .prepare("SELECT payload_json FROM notification_threads WHERE id = ?")
-      .get(threadId);
+      .get(threadId)
+    await settleSynchronousStatement()
 
-    return parseOptionalJsonRow(row, PullRequestThreadSchema);
+    return parseOptionalJsonRow(row, PullRequestThreadSchema)
   }
 
   async listByRepo(repo: RepoName): Promise<readonly PullRequestThread[]> {
@@ -49,8 +54,9 @@ export class PullRequestThreadRepository {
         WHERE repo = ?
         ORDER BY source_updated_at DESC, id ASC
       `)
-      .all(repo);
+      .all(repo)
+    await settleSynchronousStatement()
 
-    return rows.map((row) => parseJsonRow(row, PullRequestThreadSchema));
+    return rows.map((row) => parseJsonRow(row, PullRequestThreadSchema))
   }
 }

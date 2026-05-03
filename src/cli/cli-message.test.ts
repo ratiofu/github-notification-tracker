@@ -1,9 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest"
 
-import { createCliMessage } from "./cli-message.js";
+import { createCliMessage } from "./cli-message.js"
 
-describe("createCliMessage", () => {
+describe("CLI message", () => {
   it("returns the scaffold CLI message", () => {
-    expect(createCliMessage()).toBe("ght scaffold ready");
-  });
-});
+    expect(createCliMessage()).toBe("ght scaffold ready")
+  })
+})

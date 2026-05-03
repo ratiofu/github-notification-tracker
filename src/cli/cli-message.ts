@@ -1,3 +1,3 @@
 export function createCliMessage(): string {
-  return "ght scaffold ready";
+  return "ght scaffold ready"
 }

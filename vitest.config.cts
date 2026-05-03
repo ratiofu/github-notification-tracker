@@ -1,4 +1,6 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig } from "vitest/config"
+
+const COVERAGE_THRESHOLD = 90
 
 export default defineConfig({
   test: {
@@ -7,11 +9,11 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "lcov"],
       thresholds: {
-        branches: 90,
-        lines: 90,
+        branches: COVERAGE_THRESHOLD,
+        lines: COVERAGE_THRESHOLD,
       },
     },
     globals: true,
     include: ["src/**/*.test.ts", "test/**/*.test.ts"],
   },
-});
+})

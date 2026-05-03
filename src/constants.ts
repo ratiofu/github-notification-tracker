@@ -1,0 +1,9 @@
+export const DEFAULT_POLL_INTERVAL_SECONDS = 30
+export const DEFAULT_RETENTION_DAYS = 90
+export const DEFAULT_TEAM_SYNC_INTERVAL_SECONDS = 3600
+export const HTTP_NOT_MODIFIED_STATUS = 304
+export const HTTP_OK_STATUS = 200
+export const MINIMUM_POSITIVE_INTEGER = 0
+export const MINIMUM_TEXT_LENGTH = 1
+export const SQLITE_FALSE = 0
+export const SQLITE_TRUE = 1

@@ -7,7 +7,21 @@ Manual validation performed on 2026-05-02.
 Source: <https://docs.github.com/en/rest/pulls/pulls#get-a-pull-request>
 
 - `PullRequestApiPayloadSchema` matches the documented response subset used by the fetcher: numeric `id`, numeric PR `number`, `state` limited to `open`/`closed`, API `url`, browser `html_url`, `updated_at`, and `head.sha`.
+- `PullRequestMapperPayloadSchema` matches the documented response subset used by notification mapping: `id`, `number`, `title`, `state`, `merged_at`, `html_url`, `user`, `base.ref`, and `head` metadata.
 - The schema is intentionally `looseObject` because GitHub returns many additional fields that are preserved in raw JSON but not needed by the fetcher.
+
+## GitHub PR Activity Payloads
+
+Sources:
+
+- <https://docs.github.com/en/rest/issues/comments#list-issue-comments-for-a-repository>
+- <https://docs.github.com/en/rest/pulls/comments#list-review-comments-on-a-pull-request>
+- <https://docs.github.com/en/rest/pulls/reviews#list-reviews-for-a-pull-request>
+- <https://docs.github.com/en/rest/issues/timeline#list-timeline-events-for-an-issue>
+- <https://docs.github.com/en/rest/checks/runs#list-check-runs-for-a-git-reference>
+
+- `SourceActivityPayloadSchema` matches the documented subsets used by source mapping: stable `id`, actor/user objects, body/title/name text, browser/API URLs, event/state/conclusion fields, and source timestamps.
+- The schema is intentionally `looseObject` because GitHub activity payloads vary by event kind and raw JSON is retained for later reprocessing.
 
 ## GitHub User/Actor Fields
 

@@ -319,7 +319,14 @@
   - raw GitHub API payload schemas must link to the GitHub REST docs they were copied from and be manually checked against those docs when changed; record durable manual checks in `docs/schema-sources.md`.
   - use Zod v4 top-level string format schemas for GitHub URL/date-time fields, not deprecated chained validators.
   - Completed GitHub source fetcher adds raw repository activity, PR detail, timeline, issue comments, review comments, reviews, check runs, repository teams, and team member fetches with cache-validator propagation and boundary wrapper validation.
-- [ ] Add source mappers, local notification model, fingerprints, raw JSON storage, warnings, and actor-exclusion policy.
+- [x] Add source mappers, local notification model, fingerprints, raw JSON storage, warnings, and actor-exclusion policy.
+  - keep mapping pure: return local notifications, raw payload records, thread records, and warnings; persistence stays in repositories.
+  - source fingerprints are deterministic from GitHub source kind plus stable GitHub entity IDs so repeated polling deduplicates through storage.
+  - actor-exclusion runs during mapping so authenticated-user-originated source records do not become local notifications.
+  - PR thread IDs should prefer stable GitHub PR entity IDs over mutable repo/name plus PR number.
+  - team review-request targets derive their org from the configured repo owner, not a fixed placeholder org.
+  - persisted PR thread upserts must preserve existing child notification IDs when later polls map only a partial source batch.
+  - Completed source mapping adds deterministic fingerprints, URL-safe local ID generation, PR thread creation, raw payload references, mapping warnings, mention/review/check/timeline mapping, and actor exclusion.
 - [ ] Add replacement/ejection policies for checks, merged PRs, and closed PRs.
 - [ ] Add participant extraction, team cache sync, and participant filter matching.
 - [ ] Add TUI reducer for view state, keybindings, read/unread state, summary expansion, and persisted setting updates.

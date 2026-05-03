@@ -17,6 +17,7 @@ export class PullRequestThreadRepository {
 
   async upsert(thread: PullRequestThread): Promise<void> {
     const parsed = PullRequestThreadSchema.parse(thread)
+    const merged = mergeExistingNotificationIds(this.#db, parsed)
     this.#db
       .prepare(`
         INSERT INTO notification_threads (id, kind, repo, source_updated_at, payload_json)
@@ -28,11 +29,11 @@ export class PullRequestThreadRepository {
           payload_json = excluded.payload_json
       `)
       .run(
-        parsed.thread.id,
-        parsed.thread.kind,
-        parsed.thread.repo,
-        parsed.thread.sourceUpdatedAt,
-        JSON.stringify(parsed),
+        merged.thread.id,
+        merged.thread.kind,
+        merged.thread.repo,
+        merged.thread.sourceUpdatedAt,
+        JSON.stringify(merged),
       )
     await settleSynchronousStatement()
   }
@@ -59,4 +60,28 @@ export class PullRequestThreadRepository {
 
     return rows.map((row) => parseJsonRow(row, PullRequestThreadSchema))
   }
+}
+
+function mergeExistingNotificationIds(
+  db: DatabaseSync,
+  thread: PullRequestThread,
+): PullRequestThread {
+  const existing = readExistingThread(db, thread.thread.id)
+  if (existing === undefined) {
+    return thread
+  }
+
+  return {
+    ...thread,
+    notificationIds: [...new Set([...existing.notificationIds, ...thread.notificationIds])],
+  }
+}
+
+function readExistingThread(
+  db: DatabaseSync,
+  threadId: NotificationThreadId,
+): PullRequestThread | undefined {
+  const row = db.prepare("SELECT payload_json FROM notification_threads WHERE id = ?").get(threadId)
+
+  return parseOptionalJsonRow(row, PullRequestThreadSchema)
 }

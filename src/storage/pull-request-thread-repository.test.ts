@@ -12,6 +12,7 @@ describe("pull request thread repository", () => {
 
   it("round trips threads by ID and repo", roundTripsThreadsByIdAndRepo)
   it("updates an existing thread through upsert", updatesExistingThreadThroughUpsert)
+  it("preserves existing notification IDs during partial thread upserts", preservesNotificationIds)
   it("returns undefined for missing threads", returnsUndefinedForMissingThreads)
   it("parses persisted JSON through the thread schema on read", parsesPersistedJsonOnRead)
 })
@@ -41,6 +42,22 @@ async function updatesExistingThreadThroughUpsert(): Promise<void> {
   await storage.close()
 }
 
+async function preservesNotificationIds(): Promise<void> {
+  const storage = createTempStorage()
+  const repository = new PullRequestThreadRepository(storage.db)
+  const originalThread = createThreadFixture({
+    notificationIds: ["localNotification0001", "localNotification0002"],
+  })
+  const partialUpdate = createPartialThreadUpdate(originalThread)
+  const expectedThread = createExpectedMergedThread(partialUpdate)
+
+  await repository.upsert(originalThread)
+  await repository.upsert(partialUpdate)
+
+  await expect(repository.getById(originalThread.thread.id)).resolves.toStrictEqual(expectedThread)
+  await storage.close()
+}
+
 async function returnsUndefinedForMissingThreads(): Promise<void> {
   const storage = createTempStorage()
 
@@ -62,6 +79,24 @@ async function parsesPersistedJsonOnRead(): Promise<void> {
 
   await expect(repository.getById(thread.thread.id)).rejects.toThrow("Invalid input")
   await storage.close()
+}
+
+function createPartialThreadUpdate(originalThread: PullRequestThread): PullRequestThread {
+  return {
+    ...originalThread,
+    notificationIds: ["localNotification0003"],
+    thread: {
+      ...originalThread.thread,
+      sourceUpdatedAt: "2026-05-01T00:20:00.000Z",
+    },
+  }
+}
+
+function createExpectedMergedThread(partialUpdate: PullRequestThread): PullRequestThread {
+  return {
+    ...partialUpdate,
+    notificationIds: ["localNotification0001", "localNotification0002", "localNotification0003"],
+  }
 }
 
 function createUpdatedThread(originalThread: PullRequestThread): PullRequestThread {

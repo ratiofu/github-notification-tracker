@@ -1,5 +1,5 @@
+import type { LocalNotification, LocalNotificationType } from "./notification.js"
 import type { PullRequestMetadata, PullRequestThread } from "./notification-thread.js"
-import type { LocalNotification } from "./notification.js"
 import type { RawGitHubPayload } from "./shared.js"
 import type { TeamMembershipCacheEntry } from "./team-cache.js"
 
@@ -23,6 +23,8 @@ export interface LocalNotificationFixtureOptions {
   readonly sourceFingerprint?: string
   readonly sourceTimestamp?: string
   readonly thread?: PullRequestThread
+  readonly title?: string
+  readonly type?: LocalNotificationType
 }
 
 /** Reusable valid domain fixtures keep repository and mapper tests aligned with schemas. */
@@ -67,8 +69,8 @@ export function createNotificationFixture(
     targetUrl: "https://github.com/acme/widgets/pull/42#issuecomment-1",
     text: "Please take a look",
     threadId: thread.thread.id,
-    title: "PR comment",
-    type: "pr_comment",
+    title: options.title ?? "PR comment",
+    type: options.type ?? "pr_comment",
   }
 }
 

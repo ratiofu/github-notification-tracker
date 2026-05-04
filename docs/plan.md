@@ -329,7 +329,14 @@
   - team review-request targets derive their org from the configured repo owner, not a fixed placeholder org.
   - persisted PR thread upserts must preserve existing child notification IDs when later polls map only a partial source batch.
   - Completed source mapping adds deterministic fingerprints, URL-safe local ID generation, PR thread creation, raw payload references, mapping warnings, mention/review/check/timeline mapping, and actor exclusion.
-- [ ] Add replacement/ejection policies for checks, merged PRs, and closed PRs.
+- [x] Add replacement/ejection policies for checks, merged PRs, and closed PRs.
+  - keep this policy pure: it receives existing stored notifications plus newly mapped notifications and returns kept incoming notifications plus existing local IDs to eject.
+  - document the policy helpers because they encode the relationship between stored records, incoming batches, and source recency.
+  - failed-check replacement compares check context within a PR thread using notification type plus check title so a new failing check result ejects older failed-check notifications for the same check context.
+  - merged/closed PR lifecycle notifications eject prior non-comment notifications for the same PR thread; comment-like notifications remain because future and historical comments stay relevant.
+  - replacement/ejection applies within the incoming batch as well as against stored notifications so one poll does not upsert records made stale by a later source in the same batch.
+  - replacement/ejection must compare source timestamps so stale incoming source records do not eject newer stored notifications.
+  - Completed replacement/ejection policy returns incoming notifications to upsert plus existing local notification IDs to eject for failed-check replacements and merged/closed PR lifecycle events.
 - [ ] Add participant extraction, team cache sync, and participant filter matching.
 - [ ] Add TUI reducer for view state, keybindings, read/unread state, summary expansion, and persisted setting updates.
 - [ ] Add Ink renderers for normal mode, summary/detail rows, debug mode, footer, API indicator, participant picker, focus colors, and resize truncation.

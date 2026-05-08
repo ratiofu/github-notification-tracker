@@ -198,6 +198,8 @@
 - Coverage gate:
   - 90% lines
   - 90% branches
+- Oxlint keeps strict Vitest boolean assertions enabled and explicitly disables the conflicting
+  truthy/falsy matcher preference rules.
 
 ## Architecture
 
@@ -329,6 +331,9 @@
   - team review-request targets derive their org from the configured repo owner, not a fixed placeholder org.
   - persisted PR thread upserts must preserve existing child notification IDs when later polls map only a partial source batch.
   - Completed source mapping adds deterministic fingerprints, URL-safe local ID generation, PR thread creation, raw payload references, mapping warnings, mention/review/check/timeline mapping, and actor exclusion.
+- [ ] Support proper actor resolution for workflow/check notifications.
+  - workflow/check notifications should resolve their actor from the workflow run trigger actor when the check-run payload itself does not provide a meaningful user.
+  - avoid falling back to the generic `github` actor for workflow/check notifications when GitHub source data can identify who kicked off the workflow.
 - [x] Add replacement/ejection policies for checks, merged PRs, and closed PRs.
   - keep this policy pure: it receives existing stored notifications plus newly mapped notifications and returns kept incoming notifications plus existing local IDs to eject.
   - document the policy helpers because they encode the relationship between stored records, incoming batches, and source recency.
@@ -337,7 +342,12 @@
   - replacement/ejection applies within the incoming batch as well as against stored notifications so one poll does not upsert records made stale by a later source in the same batch.
   - replacement/ejection must compare source timestamps so stale incoming source records do not eject newer stored notifications.
   - Completed replacement/ejection policy returns incoming notifications to upsert plus existing local notification IDs to eject for failed-check replacements and merged/closed PR lifecycle events.
-- [ ] Add participant extraction, team cache sync, and participant filter matching.
+- [x] Add participant extraction, team cache sync, and participant filter matching.
+  - participant filtering builds set-based indexes from configured selections and from each notification's actors, author, participants, explicit targets, and cached team members.
+  - selected team filters expand through cached member logins so team selections match member activity even when the notification directly references only the user.
+  - participant picker catalog combines seen notification participants with cached teams and member logins.
+  - team sync fetches repository teams and team members, writes normalized membership cache entries, and returns cached data with a `team_sync_failed` log event when refresh fails.
+  - Completed participant module adds pure filter/catalog helpers plus a team cache sync coordinator with focused tests.
 - [ ] Add TUI reducer for view state, keybindings, read/unread state, summary expansion, and persisted setting updates.
 - [ ] Add Ink renderers for normal mode, summary/detail rows, debug mode, footer, API indicator, participant picker, focus colors, and resize truncation.
 - [ ] Add browser-open behavior for summary PR URLs and detailed notification target URLs.

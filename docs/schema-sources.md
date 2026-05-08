@@ -32,10 +32,15 @@ Source: <https://docs.github.com/en/rest/users/users#get-the-authenticated-user>
 
 ## GitHub Team Fields
 
-Source: <https://docs.github.com/en/rest/teams/teams#list-teams>
+Sources:
+
+- <https://docs.github.com/en/rest/teams/teams#list-teams>
+- <https://docs.github.com/en/rest/teams/members#list-team-members>
 
 - `TeamParticipantSchema` is a normalized local shape derived from GitHub team responses.
 - The external team response provides numeric `id`, `name`, `slug`, and URL fields; the local schema keeps those as `teamId`, `name`, `slug`, and `url`.
+- `GitHubTeamPayloadSchema` matches the documented team subset needed by cache sync: numeric `id`, `name`, `slug`, and browser `html_url`.
+- `GitHubTeamMemberPayloadSchema` matches the documented member subset needed by cache sync: member `login`.
 
 ## GitHub Entity IDs
 

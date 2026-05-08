@@ -91,6 +91,7 @@
 - Prefer storage tests that cover meaningful conflict, validation, and transaction behavior over artificial defensive guard coverage.
 - Mock Octokit responses with fixtures for integration tests.
 - Refactor long sequences of `expect` calls on object properties into reusable assertion helpers or prefer deep comparison.
+- Prefer strict boolean assertions in Vitest; use `toBe(true)`/`toBe(false)` instead of truthy/falsy matcher coercion.
 - Test and test case names must not contain the word "should"; use concise expected-behavior phrasing such as "returns initials of a name".
 - When addressing lint debt, fix one file in its entirety and run the related tests before moving to another file.
 
